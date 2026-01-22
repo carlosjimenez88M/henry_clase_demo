@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  tests:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.tests
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - DATABASE_PATH=/app/data/pink_floyd_songs.db
+      - ENVIRONMENT=test
+    volumes:
+      - ./coverage:/app/coverage
+      - ./htmlcov:/app/htmlcov
+      - ./tests:/app/tests
+      - ./src:/app/src
+      - ./api:/app/api
