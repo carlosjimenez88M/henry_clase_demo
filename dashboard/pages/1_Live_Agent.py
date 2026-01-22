@@ -1,18 +1,12 @@
 """
 Live Agent Page - Interactive Agent Demo.
 
-This page allows users to interact with the AI agent in real-time.
+This page allows users to interact with the AI agent in real-time via REST API.
 """
 
-import sys
-from pathlib import Path
-
-# Add src to path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-
+import os
+import httpx
 import streamlit as st
-from src.agents.agent_factory import AgentFactory
-from src.agents.agent_executor import AgentExecutor
 
 # Page config
 st.set_page_config(page_title="Live Agent", page_icon="", layout="wide")
@@ -52,25 +46,17 @@ with st.sidebar:
     """)
 
 # Initialize session state
-if "agent" not in st.session_state:
-    st.session_state.agent = None
-    st.session_state.executor = None
+if "current_model" not in st.session_state:
     st.session_state.current_model = None
     st.session_state.history = []
 
-# Create or update agent if model changed
+# API URL from environment or default
+API_URL = os.getenv("API_URL", "http://localhost:8000")
+
+# Update current model
 if st.session_state.current_model != model_name:
-    with st.spinner(f"Loading {model_name}..."):
-        try:
-            factory = AgentFactory()
-            agent = factory.create_agent(model_name)
-            st.session_state.agent = agent
-            st.session_state.executor = AgentExecutor(agent, model_name)
-            st.session_state.current_model = model_name
-            st.success(f" {model_name} loaded successfully!")
-        except Exception as e:
-            st.error(f" Error loading model: {e}")
-            st.stop()
+    st.session_state.current_model = model_name
+    st.success(f" {model_name} selected!")
 
 # Query input
 query = st.text_area(
@@ -97,15 +83,31 @@ with col3:
 # Clear history
 if clear_button:
     st.session_state.history = []
-    st.session_state.executor.clear_history()
     st.rerun()
 
 # Run query
 if run_button and query.strip():
     with st.spinner(" Agent is thinking..."):
         try:
-            result = st.session_state.executor.execute(query.strip())
-            st.session_state.history.append(result)
+            # Call API instead of direct execution
+            response = httpx.post(
+                f"{API_URL}/api/v1/agent/query",
+                json={
+                    "query": query.strip(),
+                    "model": model_name,
+                    "temperature": 0.1,
+                    "max_iterations": 5
+                },
+                timeout=60.0
+            )
+
+            if response.status_code == 200:
+                result = response.json()
+                st.session_state.history.append(result)
+            else:
+                st.error(f" API Error: {response.status_code}")
+                st.json(response.json())
+                st.stop()
 
             # Display result
             st.markdown("---")
