@@ -1,0 +1,38 @@
+# Dockerfile for running tests with coverage
+
+FROM python:3.12-slim
+
+# Install uv
+RUN pip install --no-cache-dir uv
+
+WORKDIR /app
+
+# Copy dependency files
+COPY pyproject.toml uv.lock ./
+
+# Install all dependencies including dev
+RUN uv sync --group dev
+
+# Copy application code
+COPY src/ /app/src/
+COPY api/ /app/api/
+COPY tests/ /app/tests/
+
+# Set environment variables
+ENV PYTHONPATH=/app
+ENV PATH="/app/.venv/bin:$PATH"
+ENV PYTHONUNBUFFERED=1
+
+# Create directories for coverage reports
+RUN mkdir -p /app/coverage /app/htmlcov
+
+# Run tests with coverage (fail if coverage < 80%)
+CMD ["pytest", \
+     "tests/", \
+     "--cov=src", \
+     "--cov=api", \
+     "--cov-report=html:/app/htmlcov", \
+     "--cov-report=term-missing", \
+     "--cov-report=xml:/app/coverage/coverage.xml", \
+     "--cov-fail-under=80", \
+     "-v"]
