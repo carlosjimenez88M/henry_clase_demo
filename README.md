@@ -2,7 +2,7 @@
 
 **Orchestration and Autonomous Agents with ReAct Framework**
 
-A comprehensive demonstration of building AI agents using the ReAct (Reasoning + Acting) framework with LangChain and OpenAI. Features custom tools for querying Pink Floyd songs and real-time currency prices.
+A modern AI agent system built with FastAPI, Docker, and the ReAct framework. Features REST API endpoints, comprehensive testing, and a Streamlit dashboard for interacting with Pink Floyd songs database and currency tools.
 
 ---
 
@@ -10,45 +10,111 @@ A comprehensive demonstration of building AI agents using the ReAct (Reasoning +
 
 ### Prerequisites
 
-- Python 3.12+
+- Python 3.12+ (for local development)
+- Docker + Docker Compose (for containerized deployment)
 - OpenAI API key
-- UV package manager
+- UV package manager (for local development)
 
-### Installation
+### Option 1: Docker (Recommended)
 
 ```bash
-# Clone the repository
+# Clone and setup
+git clone <repository-url>
 cd henry_clase_demo
+cp .env.example .env
+# Edit .env with your OPENAI_API_KEY
 
-# Install UV (if not already installed)
-curl -LsSf https://astral.sh/uv/install.sh | sh
+# Build and start services
+make docker-build
+make docker-up
 
-# Install dependencies
-uv sync --group dev
+# Access services:
+# - API: http://localhost:8000
+# - API Docs: http://localhost:8000/docs
+# - Dashboard: http://localhost:8501
 
-# Set up environment variables
-# .env file already exists with OPENAI_API_KEY
+# Run tests
+make docker-test
 
-# Initialize database
-uv run python scripts/setup_database.py
+# Stop services
+make docker-down
 ```
 
-### Running the Demo
+### Option 2: Local Development
 
 ```bash
-# Launch Streamlit Dashboard
-uv run streamlit run dashboard/app.py
+# Install dependencies and setup database
+make init
 
-# Run Model Comparison
-uv run python scripts/run_comparison.py
+# Run API server
+make run-api
 
-# Launch Jupyter Notebooks
-uv run jupyter notebook
+# Run dashboard (in another terminal)
+make run-dashboard
+
+# Run tests
+make test
+```
+
+### Quick Commands
+
+```bash
+make help              # Show all available commands
+make docker-build      # Build Docker images
+make docker-up         # Start all services
+make docker-test       # Run tests in Docker
+make test              # Run tests locally
+make coverage-html     # Generate coverage report
+make clean             # Clean generated files
 ```
 
 ---
 
-##  System Architecture
+##  Architecture
+
+### Modern Stack
+
+This project uses a modern microservices architecture with:
+
+- **FastAPI REST API**: High-performance async API with automatic OpenAPI documentation
+- **Docker + Docker Compose**: Containerized services for consistent deployments
+- **Comprehensive Testing**: Unit, integration, and E2E tests with >80% coverage
+- **Colored Logging**: Beautiful console output with loguru (green/red for success/errors)
+- **Makefile Automation**: One-command operations for all workflows
+- **Streamlit Dashboard**: Interactive UI that consumes the REST API
+
+### Services
+
+1. **API Service** (`api/`)
+   - FastAPI application with 5 routers (health, agent, database, comparison, metrics)
+   - Request logging middleware with colored output
+   - Pydantic schemas for validation
+   - Service layer for business logic
+
+2. **Dashboard Service** (`dashboard/`)
+   - Streamlit web interface
+   - Calls API via httpx
+   - Real-time agent interaction
+
+3. **Tests Service** (`tests/`)
+   - 21+ unit tests for src/ modules
+   - 18+ integration tests for API endpoints
+   - 3 E2E tests for complete workflows
+   - >80% code coverage requirement
+
+### API Endpoints
+
+- `GET /health` - Health checks
+- `POST /api/v1/agent/query` - Execute agent queries
+- `GET /api/v1/agent/models` - List available models
+- `GET /api/v1/database/songs` - Search Pink Floyd songs
+- `POST /api/v1/comparison/run` - Compare model performance
+
+See [API Documentation](docs/API.md) for complete API reference.
+
+---
+
+##  System Architecture (Original)
 
 ```mermaid
 graph TB
@@ -266,42 +332,65 @@ uv run python scripts/run_comparison.py --output results/my_comparison.json
 
 ```
 henry_clase_demo/
- src/                        # Source code
-    config.py              # Configuration with Pydantic
-    database/              # Pink Floyd songs database
-       schema.py          # SQLAlchemy models
-       seed_data.py       # 28 curated songs
-       db_manager.py      # Database operations
-    tools/                 # Custom agent tools
-       database_tool.py   # Pink Floyd database tool
-       currency_tool.py   # Currency price tool
-    agents/                # ReAct agent implementation
-       react_agent.py     # Core ReAct logic
-       agent_factory.py   # Multi-model agent factory
-       agent_executor.py  # Execution & metrics
-    comparison/            # Model comparison framework
-        metrics.py         # Performance metrics
-        evaluator.py       # Comparison logic
-        test_cases.py      # Standard test queries
-
- dashboard/                 # Streamlit dashboard
-    app.py                # Main dashboard
-    pages/
-        1_Live_Agent.py   # Interactive agent demo
-        2_Model_Comparison.py  # Comparison dashboard
-        3_Architecture.py # Architecture explanation
-
- scripts/                   # Utility scripts
-    setup_database.py     # Initialize database
-    run_comparison.py     # Run model comparison
-
- data/                      # Generated data
-    pink_floyd_songs.db   # SQLite database
-    comparison_results.json  # Comparison results
-
- .env                       # Environment variables (OPENAI_API_KEY)
- pyproject.toml            # Project metadata & dependencies
- README.md                 # This file
+├── api/                        # FastAPI REST API
+│   ├── main.py                 # FastAPI app entry point
+│   ├── middleware.py           # Request logging middleware
+│   ├── core/                   # Core utilities
+│   │   ├── logger.py           # Loguru colored logging
+│   │   ├── errors.py           # Custom exceptions
+│   │   └── config.py           # API configuration
+│   ├── routers/                # API endpoints
+│   │   ├── health.py           # Health checks
+│   │   ├── agent.py            # Agent endpoints
+│   │   ├── database.py         # Database endpoints
+│   │   ├── comparison.py       # Comparison endpoints
+│   │   └── metrics.py          # Metrics endpoints
+│   ├── schemas/                # Pydantic models
+│   │   ├── common.py           # Common schemas
+│   │   ├── agent.py            # Agent schemas
+│   │   ├── database.py         # Database schemas
+│   │   └── comparison.py       # Comparison schemas
+│   └── services/               # Business logic
+│       ├── agent_service.py    # Agent service
+│       ├── database_service.py # Database service
+│       └── comparison_service.py # Comparison service
+│
+├── src/                        # Core logic (unchanged)
+│   ├── config.py               # Configuration with Pydantic
+│   ├── database/               # Pink Floyd songs database
+│   ├── tools/                  # Custom agent tools
+│   ├── agents/                 # ReAct agent implementation
+│   └── comparison/             # Model comparison framework
+│
+├── dashboard/                  # Streamlit dashboard (adapted for API)
+│   ├── app.py                  # Main dashboard
+│   └── pages/
+│       ├── 1_Live_Agent.py     # Interactive agent (uses API)
+│       ├── 2_Model_Comparison.py # Comparison dashboard
+│       └── 3_Architecture.py   # Architecture explanation
+│
+├── tests/                      # Comprehensive test suite
+│   ├── conftest.py             # Global fixtures
+│   ├── unit/                   # Unit tests (60% coverage)
+│   ├── integration/            # Integration tests (25% coverage)
+│   └── e2e/                    # E2E tests (15% coverage)
+│
+├── docker/                     # Docker configuration
+│   ├── Dockerfile.api          # API production image
+│   ├── Dockerfile.tests        # Test runner image
+│   └── Dockerfile.dashboard    # Dashboard image
+│
+├── docs/                       # Documentation
+│   ├── API.md                  # API reference
+│   └── DEPLOYMENT.md           # Deployment guide
+│
+├── docker-compose.yml          # Service orchestration
+├── docker-compose.dev.yml      # Development mode
+├── docker-compose.test.yml     # Test mode
+├── Makefile                    # Automation commands
+├── .env.example                # Environment template
+├── pyproject.toml              # Dependencies & config
+└── README.md                   # This file
 ```
 
 ---
