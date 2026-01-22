@@ -214,23 +214,23 @@ class CurrencyPriceTool(BaseTool):
         result = f"Current exchange rate: 1 {from_currency} = {rate:.4f} {to_currency}\n"
         result += f"(as of {timestamp})\n\n"
         result += f"This means:\n"
-        result += f"  • {amount:.2f} {from_currency} = {converted_amount:.2f} {to_currency}\n"
+        result += f"  → {amount:.2f} {from_currency} = {converted_amount:.2f} {to_currency}\n"
 
         # Add additional context
         if amount == 1:
-            result += f"  • 100 {from_currency} = {(rate * 100):.2f} {to_currency}\n"
+            result += f"  → 100 {from_currency} = {(rate * 100):.2f} {to_currency}\n"
 
         return result
 
     def _format_error(self, message: str) -> str:
         """Format error message."""
         return (
-            f" Error: {message}\n\n"
+            f"Error: {message}\n\n"
             "Supported currencies: USD, EUR, GBP, JPY, CHF, CAD, AUD, MXN, BRL, CNY\n"
             "Example queries:\n"
-            "  • 'USD to EUR'\n"
-            "  • '100 dollars in euros'\n"
-            "  • 'current pound sterling rate'"
+            "  - 'USD to EUR'\n"
+            "  - '100 dollars in euros'\n"
+            "  - 'current pound sterling rate'"
         )
 
     async def _arun(self, query: str) -> str:

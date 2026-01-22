@@ -63,25 +63,25 @@ Example ReAct Trace:
 
 User: "Find melancholic Pink Floyd songs"
 
-â†’ Thought 1:
+†’ Thought 1:
   "I need to search the database
    for melancholic mood songs"
 
-â†’ Action 1:
+†’ Action 1:
   Tool: pink_floyd_database
   Input: "melancholic songs"
 
-â†’ Observation 1:
+†’ Observation 1:
   "Found 7 songs:
    1. Time
    2. Comfortably Numb
    3. Wish You Were Here..."
 
-â†’ Thought 2:
+†’ Thought 2:
   "I have all the information
    needed to answer"
 
-â†’ Final Answer:
+†’ Final Answer:
   "Here are melancholic Pink
    Floyd songs: [detailed list]"
         """, language="text")
@@ -266,12 +266,12 @@ response = llm_with_tools.invoke(
     st.markdown("###  Execution Flow")
 
     st.markdown("""
-    1. **User Query** â†’ Enters system
-    2. **LLM Processing** â†’ Model decides on action
-    3. **Tool Execution** â†’ If tool needed, execute it
-    4. **Result Processing** â†’ LLM receives tool output
-    5. **Final Answer** â†’ LLM generates response
-    6. **Metrics Tracking** â†’ Time, tokens, cost recorded
+    1. **User Query** †’ Enters system
+    2. **LLM Processing** †’ Model decides on action
+    3. **Tool Execution** †’ If tool needed, execute it
+    4. **Result Processing** †’ LLM receives tool output
+    5. **Final Answer** †’ LLM generates response
+    6. **Metrics Tracking** †’ Time, tokens, cost recorded
     """)
 
     st.markdown("---")

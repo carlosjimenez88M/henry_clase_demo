@@ -16,7 +16,12 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from api.routers import health, agent, database, comparison, metrics
-from api.middleware import log_requests
+from api.middleware import (
+    log_requests,
+    rate_limit_middleware,
+    security_headers_middleware,
+    timeout_middleware
+)
 from api.core.logger import logger, log_success, log_error
 from api.core.config import get_settings
 
@@ -82,17 +87,20 @@ app = FastAPI(
     openapi_url="/openapi.json",
 )
 
-# Add CORS middleware
+# Add CORS middleware (FIXED: No wildcards!)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_origins,
+    allow_origins=settings.cors_origins,  # Now restricted to localhost only
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE"],
     allow_headers=["*"],
 )
 
-# Add request logging middleware
-app.middleware("http")(log_requests)
+# Add security middlewares
+app.middleware("http")(timeout_middleware)  # 60s timeout
+app.middleware("http")(security_headers_middleware)  # Security headers
+app.middleware("http")(rate_limit_middleware)  # 60 req/min rate limiting
+app.middleware("http")(log_requests)  # Request logging
 
 # Include routers
 app.include_router(health.router, tags=["Health"])

@@ -37,7 +37,7 @@ class Config(BaseSettings):
     default_model: str = Field(default="gpt-4o-mini", description="Default model to use")
     temperature: float = Field(default=0.1, description="Temperature for model responses")
     max_tokens: int = Field(default=1000, description="Maximum tokens for model responses")
-
+    
     # Database
     database_path: Path = Field(
         default=Path("data/pink_floyd_songs.db"),

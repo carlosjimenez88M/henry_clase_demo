@@ -2,13 +2,15 @@
 Agent Executor with metrics tracking.
 
 This module provides an executor for running agents with performance metrics,
-token counting, and cost estimation.
+token counting, and cost estimation. Supports both standard ReAct and CoT agents.
 """
 
 import time
-from typing import Dict, Optional
+import asyncio
+from typing import Dict, Optional, Union, Any
 
 from src.agents.react_agent import run_agent
+from src.agents.cot_agent import CoTReActAgent, run_cot_agent
 
 
 class AgentExecutor:
@@ -21,17 +23,18 @@ class AgentExecutor:
         "gpt-5-nano": {"input": 0.10, "output": 0.40},  # Estimated
     }
 
-    def __init__(self, agent, model_name: str):
+    def __init__(self, agent: Union[Any, CoTReActAgent], model_name: str):
         """
         Initialize agent executor.
 
         Args:
-            agent: Compiled LangGraph agent
+            agent: Agent instance (standard ReAct or CoT agent)
             model_name: Name of the model being used
         """
         self.agent = agent
         self.model_name = model_name
         self.execution_history = []
+        self.is_cot_agent = isinstance(agent, CoTReActAgent)
 
     def execute(self, query: str) -> Dict:
         """
@@ -46,8 +49,13 @@ class AgentExecutor:
         # Start timing
         start_time = time.time()
 
-        # Run agent
-        result = run_agent(self.agent, query)
+        # Run appropriate agent type
+        if self.is_cot_agent:
+            # CoT agents are async, so we need to run in event loop
+            result = asyncio.run(run_cot_agent(self.agent, query))
+        else:
+            # Standard ReAct agent (sync)
+            result = run_agent(self.agent, query)
 
         # Calculate execution time
         execution_time = time.time() - start_time
@@ -69,9 +77,14 @@ class AgentExecutor:
                 "estimated_tokens": tokens,
                 "estimated_cost_usd": cost,
                 "num_steps": len(result["reasoning_trace"]),
+                "agent_type": "cot" if self.is_cot_agent else "react"
             },
             "raw_messages": result.get("raw_messages", [])
         }
+
+        # Add CoT-specific metadata if available
+        if "metadata" in result:
+            execution_result["metadata"] = result["metadata"]
 
         # Store in history
         self.execution_history.append(execution_result)
@@ -102,7 +115,7 @@ class AgentExecutor:
         # Count characters in answer
         output_chars = len(answer)
 
-        # Rough conversion: 4 chars ≈ 1 token
+        # Rough conversion: 4 chars �� 1 token
         input_tokens = input_chars // 4
         output_tokens = output_chars // 4
         total_tokens = input_tokens + output_tokens

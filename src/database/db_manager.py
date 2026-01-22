@@ -44,7 +44,7 @@ class DatabaseManager:
                 self._seed_data(session)
                 print(f" Database initialized with {len(PINK_FLOYD_SONGS)} songs")
             else:
-                print(f"ℹ  Database already contains {count} songs")
+                print(f"✓ Database already contains {count} songs")
 
     def _seed_data(self, session: Session) -> None:
         """Seed database with Pink Floyd songs."""

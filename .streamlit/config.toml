@@ -1,0 +1,47 @@
+# Streamlit Configuration for Pink Floyd AI Agent Dashboard
+# Professional theme with Pink Floyd branding
+
+[theme]
+# Primary color - Pink Floyd pink
+primaryColor = "#FF1493"
+
+# Background colors - Dark theme
+backgroundColor = "#0E1117"
+secondaryBackgroundColor = "#262730"
+
+# Text colors
+textColor = "#FAFAFA"
+
+# Font
+font = "sans serif"
+
+[server]
+# Security
+enableXsrfProtection = true
+enableCORS = false
+maxUploadSize = 5
+
+# Performance
+runOnSave = false
+
+[browser]
+# Privacy
+gatherUsageStats = false
+
+# Title
+serverAddress = "localhost"
+serverPort = 8501
+
+[client]
+# Toolbar mode
+toolbarMode = "minimal"
+showErrorDetails = true
+
+[logger]
+# Logging level
+level = "info"
+messageFormat = "%(asctime)s %(levelname)s: %(message)s"
+
+[deprecation]
+# Disable deprecation warnings in production
+showPyplotGlobalUse = false

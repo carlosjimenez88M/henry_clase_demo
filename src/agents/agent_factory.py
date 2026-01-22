@@ -2,17 +2,21 @@
 Agent Factory for creating ReAct agents with different models.
 
 This module provides a factory pattern for creating agents with different
-OpenAI models and configurations.
+OpenAI models and configurations. Supports both standard ReAct and CoT-enhanced agents.
 """
 
-from typing import List, Optional
+from typing import List, Optional, Literal
 
 from langchain.tools import BaseTool
 
 from src.agents.react_agent import create_react_agent
+from src.agents.cot_agent import create_cot_agent, CoTReActAgent
 from src.config import config
 from src.tools.currency_tool import CurrencyPriceTool
 from src.tools.database_tool import PinkFloydDatabaseTool
+
+
+AgentType = Literal["react", "cot"]
 
 
 class AgentFactory:
@@ -21,9 +25,18 @@ class AgentFactory:
     # Available models
     SUPPORTED_MODELS = ["gpt-4o-mini", "gpt-4o", "gpt-5-nano"]
 
-    def __init__(self):
-        """Initialize agent factory."""
+    # Default agent type
+    DEFAULT_AGENT_TYPE: AgentType = "cot"  # Use CoT by default for better reasoning
+
+    def __init__(self, default_agent_type: AgentType = "cot"):
+        """
+        Initialize agent factory.
+
+        Args:
+            default_agent_type: Default agent type to create ("react" or "cot")
+        """
         self.tools = self._initialize_tools()
+        self.default_agent_type = default_agent_type
 
     def _initialize_tools(self) -> List[BaseTool]:
         """Initialize the tools available to agents."""
@@ -36,21 +49,25 @@ class AgentFactory:
         self,
         model_name: str,
         temperature: Optional[float] = None,
-        custom_tools: Optional[List[BaseTool]] = None
+        custom_tools: Optional[List[BaseTool]] = None,
+        agent_type: Optional[AgentType] = None,
+        use_adaptive_prompt: bool = True
     ):
         """
-        Create a ReAct agent with specified model.
+        Create an agent with specified configuration.
 
         Args:
             model_name: Model name (e.g., 'gpt-4o-mini')
             temperature: Optional temperature override
             custom_tools: Optional custom tools (defaults to standard tools)
+            agent_type: Type of agent ("react" or "cot"). Defaults to factory's default.
+            use_adaptive_prompt: For CoT agents, whether to use adaptive prompts
 
         Returns:
-            Compiled LangGraph agent
+            Configured agent (either standard ReAct or CoT)
 
         Raises:
-            ValueError: If model_name is not supported
+            ValueError: If model_name is not supported or agent_type is invalid
         """
         if model_name not in self.SUPPORTED_MODELS:
             raise ValueError(
@@ -60,19 +77,33 @@ class AgentFactory:
 
         # Get model configuration
         model_config = config.get_model_config(model_name)
-
-        # Use provided temperature or default from config
         temp = temperature if temperature is not None else model_config.temperature
 
         # Use provided tools or default tools
         tools = custom_tools if custom_tools is not None else self.tools
 
-        # Create agent
-        agent = create_react_agent(
-            model_name=model_name,
-            tools=tools,
-            temperature=temp
-        )
+        # Determine agent type
+        agent_type_to_use = agent_type if agent_type is not None else self.default_agent_type
+
+        # Create appropriate agent type
+        if agent_type_to_use == "cot":
+            agent = create_cot_agent(
+                model_name=model_name,
+                tools=tools,
+                temperature=temp,
+                use_adaptive_prompt=use_adaptive_prompt
+            )
+        elif agent_type_to_use == "react":
+            agent = create_react_agent(
+                model_name=model_name,
+                tools=tools,
+                temperature=temp
+            )
+        else:
+            raise ValueError(
+                f"Invalid agent_type '{agent_type_to_use}'. "
+                f"Supported types: 'react', 'cot'"
+            )
 
         return agent
 
@@ -99,3 +130,48 @@ class AgentFactory:
     def get_supported_models(self) -> List[str]:
         """Get list of supported models."""
         return self.SUPPORTED_MODELS
+
+    def create_cot_agent(
+        self,
+        model_name: str,
+        temperature: Optional[float] = None,
+        use_adaptive_prompt: bool = True
+    ) -> CoTReActAgent:
+        """
+        Convenience method to create a CoT agent.
+
+        Args:
+            model_name: Model name
+            temperature: Optional temperature override
+            use_adaptive_prompt: Whether to use adaptive prompts
+
+        Returns:
+            CoTReActAgent instance
+        """
+        return self.create_agent(
+            model_name=model_name,
+            temperature=temperature,
+            agent_type="cot",
+            use_adaptive_prompt=use_adaptive_prompt
+        )
+
+    def create_react_agent(
+        self,
+        model_name: str,
+        temperature: Optional[float] = None
+    ):
+        """
+        Convenience method to create a standard ReAct agent.
+
+        Args:
+            model_name: Model name
+            temperature: Optional temperature override
+
+        Returns:
+            Standard ReAct agent
+        """
+        return self.create_agent(
+            model_name=model_name,
+            temperature=temperature,
+            agent_type="react"
+        )

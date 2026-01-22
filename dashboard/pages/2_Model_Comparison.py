@@ -108,7 +108,7 @@ else:
     col1, col2 = st.columns(2)
 
     with col1:
-        st.markdown("### ⏱ Average Response Time")
+        st.markdown("###  Average Response Time")
         fig = px.bar(
             df,
             x="Model",

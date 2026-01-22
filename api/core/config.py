@@ -34,9 +34,15 @@ class APISettings(BaseSettings):
         default="development", description="Environment"
     )
 
-    # CORS
+    # CORS - FIXED: No wildcards for security
     cors_origins: list[str] = Field(
-        default=["*"], description="Allowed CORS origins"
+        default=[
+            "http://localhost:8501",  # Streamlit dashboard
+            "http://localhost:8000",  # API itself
+            "http://127.0.0.1:8501",
+            "http://127.0.0.1:8000",
+        ],
+        description="Allowed CORS origins (no wildcards for security)"
     )
 
     # OpenAI API Key (from base config)

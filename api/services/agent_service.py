@@ -8,6 +8,8 @@ from src.agents.agent_factory import AgentFactory
 from src.agents.agent_executor import AgentExecutor
 from api.core.logger import logger
 from api.core.errors import ModelError
+from api.storage.execution_store import ExecutionStore
+from api.cache.query_cache import get_query_cache
 
 
 class AgentService:
@@ -15,9 +17,10 @@ class AgentService:
 
     def __init__(self):
         """Initialize agent service."""
-        self.factory = AgentFactory()
-        self.execution_history: dict[str, dict[str, Any]] = {}
-        logger.info("AgentService initialized")
+        self.factory = AgentFactory(default_agent_type="cot")  # Use CoT agents by default
+        self.execution_store = ExecutionStore()  # FIXED: Use persistent storage instead of dict
+        self.query_cache = get_query_cache()  # Query cache for performance
+        logger.info("AgentService initialized with CoT agents, persistent storage, and caching")
 
     async def execute_query(
         self,
@@ -27,7 +30,7 @@ class AgentService:
         max_iterations: int
     ) -> dict[str, Any]:
         """
-        Execute a query with the AI agent.
+        Execute a query with the AI agent (with caching).
 
         Args:
             query: User query string
@@ -41,10 +44,20 @@ class AgentService:
         Raises:
             ModelError: If model execution fails
         """
+        # Check cache first
+        cached_result = self.query_cache.get(query, model, temperature)
+        if cached_result:
+            logger.info(f"Cache HIT for query: {query[:50]}...")
+            # Add new execution_id and timestamp for this cache hit
+            cached_result["execution_id"] = str(uuid.uuid4())
+            cached_result["timestamp"] = datetime.utcnow().isoformat() + "Z"
+            cached_result["from_cache"] = True
+            return cached_result
+
         execution_id = str(uuid.uuid4())
 
         try:
-            logger.info(f"Executing query with model={model}: {query[:50]}...")
+            logger.info(f"Cache MISS - Executing query with model={model}: {query[:50]}...")
 
             # Create agent
             agent = self.factory.create_agent(model, temperature=temperature)
@@ -70,13 +83,22 @@ class AgentService:
             # Add execution metadata
             result["execution_id"] = execution_id
             result["timestamp"] = datetime.utcnow().isoformat() + "Z"
+            result["from_cache"] = False
 
-            # Store in history
-            self.execution_history[execution_id] = result
+            # Cache the result for future queries
+            self.query_cache.set(query, model, temperature, result.copy())
+
+            # Store in persistent storage (FIXED: No more memory leak!)
+            self.execution_store.save_execution(result)
+
+            # Periodically cleanup old executions (every 100 queries)
+            if int(execution_id.split('-')[0], 16) % 100 == 0:
+                self.execution_store.cleanup_old_executions()
 
             logger.success(
                 f"Query executed successfully: {execution_id} "
-                f"({result['metrics']['execution_time_seconds']}s)"
+                f"({result['metrics']['execution_time_seconds']}s, "
+                f"agent_type={result.get('metrics', {}).get('agent_type', 'unknown')})"
             )
 
             return result
@@ -140,7 +162,7 @@ class AgentService:
 
     def get_execution_history(self, limit: int = 50) -> list[dict[str, Any]]:
         """
-        Get execution history.
+        Get execution history from persistent storage.
 
         Args:
             limit: Maximum number of executions to return
@@ -148,21 +170,11 @@ class AgentService:
         Returns:
             List of execution summaries
         """
-        executions = []
-        for exec_id, result in list(self.execution_history.items())[-limit:]:
-            executions.append({
-                "execution_id": exec_id,
-                "query": result.get("query", "")[:100],
-                "timestamp": result.get("timestamp", ""),
-                "model": result.get("metrics", {}).get("model", ""),
-                "execution_time": result.get("metrics", {}).get("execution_time_seconds", 0)
-            })
-
-        return list(reversed(executions))
+        return self.execution_store.get_recent_executions(limit)
 
     def get_execution_detail(self, execution_id: str) -> dict[str, Any] | None:
         """
-        Get detailed execution result by ID.
+        Get detailed execution result by ID from persistent storage.
 
         Args:
             execution_id: Execution ID
@@ -170,9 +182,27 @@ class AgentService:
         Returns:
             Full execution result or None if not found
         """
-        return self.execution_history.get(execution_id)
+        return self.execution_store.get_execution(execution_id)
 
     def clear_history(self) -> None:
-        """Clear execution history."""
-        self.execution_history.clear()
-        logger.info("Execution history cleared")
+        """Clear execution history from persistent storage."""
+        self.execution_store.clear_all()
+        logger.info("Execution history cleared from persistent storage")
+
+    def get_storage_statistics(self) -> dict[str, Any]:
+        """
+        Get storage statistics.
+
+        Returns:
+            Storage statistics dictionary
+        """
+        return self.execution_store.get_statistics()
+
+    def get_cache_statistics(self) -> dict[str, Any]:
+        """
+        Get cache statistics.
+
+        Returns:
+            Cache statistics dictionary
+        """
+        return self.query_cache.get_statistics()

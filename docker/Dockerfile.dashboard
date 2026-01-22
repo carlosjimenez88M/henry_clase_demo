@@ -10,8 +10,8 @@ RUN pip install --no-cache-dir uv && \
 
 WORKDIR /app
 
-# Copy dependency files
-COPY pyproject.toml uv.lock ./
+# Copy dependency files and README (required for package build)
+COPY pyproject.toml uv.lock README.md ./
 
 # Install dependencies
 RUN uv sync

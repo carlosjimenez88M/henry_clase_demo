@@ -1,4 +1,4 @@
-# ðŸŽ“ ReAct Agent Analysis Notebooks
+# ŸŽ“ ReAct Agent Analysis Notebooks
 
 ## Overview
 
@@ -13,7 +13,7 @@ This directory contains professional Jupyter notebooks for deep analysis of the 
 **Professional analysis notebook with:**
 
 - **Graph Visualizations**: Visual representation of agent execution flow
-  - Color-coded nodes (Query â†’ Thought â†’ Action â†’ Observation â†’ Answer)
+  - Color-coded nodes (Query †’ Thought â†’ Action â†’ Observation â†’ Answer)
   - NetworkX-based directed graphs showing reasoning paths
   - Interactive matplotlib visualizations
 

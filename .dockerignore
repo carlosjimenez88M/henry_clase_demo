@@ -47,7 +47,8 @@ Thumbs.db
 
 # Documentation
 docs/
-*.md
+# Keep README.md for package build
+# *.md
 
 # Data (keep database)
 # data/

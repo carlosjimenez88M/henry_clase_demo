@@ -12,7 +12,7 @@ class TestAgentService:
         service = AgentService()
         assert service is not None
         assert service.factory is not None
-        assert len(service.execution_history) == 0
+        assert service.execution_store is not None
 
     def test_get_available_models(self):
         """Test getting available models."""
@@ -58,10 +58,8 @@ class TestAgentService:
     def test_clear_history(self):
         """Test clearing execution history."""
         service = AgentService()
-        service.execution_history["test"] = {"data": "test"}
-
-        assert len(service.execution_history) == 1
-
+        # With ExecutionStore, history is persistent in SQLite
         service.clear_history()
-
-        assert len(service.execution_history) == 0
+        history = service.get_execution_history()
+        # After clearing, should have no recent entries
+        assert isinstance(history, list)

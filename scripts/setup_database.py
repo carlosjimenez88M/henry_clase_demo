@@ -47,7 +47,7 @@ def main():
     print("\n Sample Songs:")
     sample_songs = db_manager.get_all_songs(limit=5)
     for song in sample_songs:
-        print(f"   â€¢ {song.title} ({song.album}, {song.year}) - Mood: {song.mood}")
+        print(f"   €¢ {song.title} ({song.album}, {song.year}) - Mood: {song.mood}")
 
     print("\n Database setup complete!")
 

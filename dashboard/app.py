@@ -9,7 +9,7 @@ import streamlit as st
 # Page configuration
 st.set_page_config(
     page_title="Pink Floyd AI Agent Demo",
-    page_icon="",
+    page_icon="🔷",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -40,7 +40,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Main content
-st.markdown('<div class="main-header"> Pink Floyd AI Agent Demo</div>', unsafe_allow_html=True)
+st.markdown('<div class="main-header">Pink Floyd AI Agent Demo</div>', unsafe_allow_html=True)
 st.markdown('<div class="sub-header">Orchestration and Autonomous Agents with ReAct Framework</div>', unsafe_allow_html=True)
 
 # Introduction
@@ -50,16 +50,16 @@ st.markdown("""
 This interactive dashboard demonstrates an AI agent built with the **ReAct (Reasoning + Acting)** framework.
 The agent can autonomously use tools to answer complex queries.
 
-###  Available Tools
+### Available Tools
 
 The agent has access to two custom tools:
 
-1. **Pink Floyd Database** 
+1. **Pink Floyd Database**
    - Query 28 iconic Pink Floyd songs
    - Search by mood (melancholic, energetic, psychedelic, progressive, dark)
    - Search by album, lyrics, or year
 
-2. **Currency Price Checker** 
+2. **Currency Price Checker**
    - Real-time exchange rates
    - Supports USD, EUR, GBP, JPY, CHF, CAD, AUD, and more
    - Live API integration with fallback data
@@ -70,7 +70,7 @@ col1, col2, col3 = st.columns(3)
 
 with col1:
     st.markdown('<div class="feature-box">', unsafe_allow_html=True)
-    st.markdown("###  Live Agent")
+    st.markdown("### Live Agent")
     st.markdown("""
     **Try the agent yourself!**
     - Interactive query interface
@@ -83,7 +83,7 @@ with col1:
 
 with col2:
     st.markdown('<div class="feature-box">', unsafe_allow_html=True)
-    st.markdown("###  Model Comparison")
+    st.markdown("### Model Comparison")
     st.markdown("""
     **Compare different models:**
     - gpt-4o-mini
@@ -96,7 +96,7 @@ with col2:
 
 with col3:
     st.markdown('<div class="feature-box">', unsafe_allow_html=True)
-    st.markdown("###  Architecture")
+    st.markdown("### Architecture")
     st.markdown("""
     **Learn how it works:**
     - ReAct framework explained
@@ -109,7 +109,7 @@ with col3:
 
 # ReAct Framework Overview
 st.markdown("---")
-st.markdown("##  ReAct Framework Overview")
+st.markdown("## ReAct Framework Overview")
 
 col1, col2 = st.columns([1, 1])
 
@@ -148,7 +148,7 @@ Final Answer: Here are melancholic
 
 # Technology Stack
 st.markdown("---")
-st.markdown("##  Technology Stack")
+st.markdown("## Technology Stack")
 
 col1, col2, col3, col4 = st.columns(4)
 
@@ -189,6 +189,6 @@ st.markdown("---")
 st.markdown("""
 <div style="text-align: center; color: #888; padding: 2rem 0;">
     <p>Built for Henry Class Demo | 20-Minute Presentation on AI Agents</p>
-    <p> Pink Floyd Edition | Powered by OpenAI</p>
+    <p>Pink Floyd Edition | Powered by OpenAI</p>
 </div>
 """, unsafe_allow_html=True)

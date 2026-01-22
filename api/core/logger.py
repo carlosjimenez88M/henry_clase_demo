@@ -68,7 +68,7 @@ def log_info(message: str, **kwargs):
 
 def log_debug(message: str, **kwargs):
     """Log a debug message in magenta."""
-    logger.opt(colors=True).debug(f"<magenta>🐛 {message}</magenta>", **kwargs)
+    logger.opt(colors=True).debug(f"<magenta>🔍 {message}</magenta>", **kwargs)
 
 
 # Export logger and convenience functions
