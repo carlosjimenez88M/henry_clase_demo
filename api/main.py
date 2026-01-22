@@ -125,22 +125,30 @@ async def root():
 
 
 # Error handlers
+from fastapi.responses import JSONResponse
+
 @app.exception_handler(404)
 async def not_found_handler(request, exc):
     """Custom 404 handler."""
-    return {
-        "error": "Not Found",
-        "detail": f"The requested resource was not found: {request.url.path}",
-        "status_code": 404
-    }
+    return JSONResponse(
+        status_code=404,
+        content={
+            "error": "Not Found",
+            "detail": f"The requested resource was not found: {request.url.path}",
+            "status_code": 404
+        }
+    )
 
 
 @app.exception_handler(500)
 async def internal_error_handler(request, exc):
     """Custom 500 handler."""
     log_error(f"Internal server error: {exc}")
-    return {
-        "error": "Internal Server Error",
-        "detail": "An unexpected error occurred. Please try again later.",
-        "status_code": 500
-    }
+    return JSONResponse(
+        status_code=500,
+        content={
+            "error": "Internal Server Error",
+            "detail": "An unexpected error occurred. Please try again later.",
+            "status_code": 500
+        }
+    )

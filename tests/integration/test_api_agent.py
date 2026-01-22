@@ -36,6 +36,8 @@ def test_get_execution_detail_not_found(api_client: TestClient):
     response = api_client.get("/api/v1/agent/history/non-existent-id")
 
     assert response.status_code == 404
+    data = response.json()
+    assert "detail" in data
 
 
 def test_agent_query_validation_empty_query(api_client: TestClient):
