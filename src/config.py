@@ -40,14 +40,14 @@ class Config(BaseSettings):
     
     # Database
     database_path: Path = Field(
-        default=Path("data/pink_floyd_songs.db"),
+        default=Path(__file__).parent.parent / "data" / "pink_floyd_songs.db",
         description="Path to SQLite database"
     )
 
     # Logging
     log_level: str = Field(default="INFO", description="Logging level")
     log_file: Path = Field(
-        default=Path("logs/app.log"),
+        default=Path(__file__).parent.parent / "logs" / "app.log",
         description="Path to log file"
     )
 
