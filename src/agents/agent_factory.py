@@ -11,12 +11,13 @@ from langchain.tools import BaseTool
 
 from src.agents.react_agent import create_react_agent
 from src.agents.cot_agent import create_cot_agent, CoTReActAgent
+from src.agents.langgraph_react_agent import create_langgraph_react_agent
 from src.config import config
 from src.tools.currency_tool import CurrencyPriceTool
 from src.tools.database_tool import PinkFloydDatabaseTool
 
 
-AgentType = Literal["react", "cot"]
+AgentType = Literal["react", "cot", "langgraph_react"]
 
 
 class AgentFactory:
@@ -99,10 +100,16 @@ class AgentFactory:
                 tools=tools,
                 temperature=temp
             )
+        elif agent_type_to_use == "langgraph_react":
+            agent = create_langgraph_react_agent(
+                model_name=model_name,
+                tools=tools,
+                temperature=temp
+            )
         else:
             raise ValueError(
                 f"Invalid agent_type '{agent_type_to_use}'. "
-                f"Supported types: 'react', 'cot'"
+                f"Supported types: 'react', 'cot', 'langgraph_react'"
             )
 
         return agent
