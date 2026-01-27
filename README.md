@@ -1,4 +1,12 @@
+![](https://www.soyhenry.com/_next/static/media/HenryLogo.bb57fd6f.svg)
+
 # Pink Floyd AI Agent - Proyecto Educativo
+
+### Objetivo
+
+* Introducir el concepto de Agentes y AI 
+* Orientar hacia la lógica de qué son los agentes? para qué sirven y cómo orquestarlos ?
+* Abrir la frontera de la interpretación y del desarrollo de modelos de AI en producción y orientación al gitOps
 
 ## Introducción
 
@@ -14,7 +22,8 @@ Este proyecto fue desarrollado como material educativo para estudiantes de Henry
 - Contenedores Docker para desarrollo y producción
 - Almacenamiento persistente y caché de consultas
 
-El proyecto utiliza la temática de Pink Floyd para demostrar cómo los agentes pueden interactuar con conocimiento estructurado (catálogo musical) mientras acceden a información en tiempo real (tasas de cambio).
+El proyecto utiliza la temática de Pink Floyd (porque sí) para demostrar cómo los agentes pueden interactuar con conocimiento estructurado (catálogo musical) mientras acceden a información en tiempo real (tasas de cambio).
+
 
 ---
 
@@ -2090,18 +2099,8 @@ Los estudiantes que deseen contribuir pueden:
 - Asegurar que todos los tests pasan
 - Usar commits descriptivos (conventional commits)
 
-### Contacto
 
-Para preguntas relacionadas con el curso de Henry, contactar a los instructores a través de los canales oficiales de la plataforma Henry.
 
----
 
-**Built for Henry Class Demo** - Demonstrating Orchestration and Autonomous Agents with ReAct Framework and Chain of Thought Reasoning.
 
-**Pink Floyd Edition** - Una tribute a una de las bandas de rock progresivo más grandes, demostrando cómo los agentes AI pueden interactuar con conocimiento estructurado (catálogo musical) mientras acceden a información en tiempo real (tasas de cambio de divisas).
 
----
-
-**Última actualización**: 2026-01-27
-**Versión**: 1.0.0
-**Estado**: Producción Ready
