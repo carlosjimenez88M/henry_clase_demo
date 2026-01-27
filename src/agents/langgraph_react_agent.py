@@ -8,7 +8,7 @@ enabling visualization of agent architecture using LangGraph's built-in graph ut
 from collections.abc import Sequence
 from typing import Annotated, Literal, TypedDict
 
-from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
+from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
 from langchain_core.tools import BaseTool
 from langchain_openai import ChatOpenAI
 from langgraph.graph import END, START, StateGraph
@@ -68,9 +68,9 @@ Be concise and explain your reasoning."""
         """Agent node that calls the LLM to decide next action."""
         messages = state["messages"]
 
-        # Add system prompt if first message
+        # Add system prompt if first message (use SystemMessage object, not dict)
         if len(messages) == 1 or not any(isinstance(m, AIMessage) for m in messages):
-            messages = [{"role": "system", "content": system_prompt}] + list(messages)
+            messages = [SystemMessage(content=system_prompt)] + list(messages)
 
         response = llm_with_tools.invoke(messages)
         return {"messages": [response]}

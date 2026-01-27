@@ -8,7 +8,7 @@ Includes caching to reduce API calls and fallback to mock data for reliability.
 import re
 from datetime import datetime, timedelta
 
-import requests
+import httpx
 from langchain.tools import BaseTool
 from pydantic import Field
 
@@ -147,19 +147,20 @@ class CurrencyPriceTool(BaseTool):
             if datetime.now() - cached_time < timedelta(seconds=self.cache_ttl):
                 return cached_data.get(to_currency)
 
-        # Fetch from API
+        # Fetch from API (sync version using httpx)
         try:
             url = f"{self.api_url}{from_currency}"
-            response = requests.get(url, timeout=5)
-            response.raise_for_status()
+            with httpx.Client() as client:
+                response = client.get(url, timeout=5)
+                response.raise_for_status()
 
-            data = response.json()
-            rates = data.get("rates", {})
+                data = response.json()
+                rates = data.get("rates", {})
 
-            # Cache the result
-            self.cache[cache_key] = (rates, datetime.now())
+                # Cache the result
+                self.cache[cache_key] = (rates, datetime.now())
 
-            return rates.get(to_currency)
+                return rates.get(to_currency)
 
         except Exception as e:
             print(f"API error: {e}")
@@ -236,5 +237,63 @@ class CurrencyPriceTool(BaseTool):
         )
 
     async def _arun(self, query: str) -> str:
-        """Async version (not implemented, falls back to sync)."""
-        return self._run(query)
+        """Async version with real async HTTP calls."""
+        # Parse currency pair from query
+        from_currency, to_currency, amount = self._parse_query(query)
+
+        if not from_currency or not to_currency:
+            return self._format_error(
+                "Could not understand currency query. "
+                "Please specify currencies like 'USD to EUR' or 'dollar to euro'."
+            )
+
+        # Get exchange rate async
+        try:
+            rate = await self._get_exchange_rate_async(from_currency, to_currency)
+            if rate is None:
+                return self._use_fallback_data(from_currency, to_currency, amount)
+
+            return self._format_result(from_currency, to_currency, rate, amount)
+
+        except Exception:
+            return self._use_fallback_data(from_currency, to_currency, amount)
+
+    async def _get_exchange_rate_async(
+        self, from_currency: str, to_currency: str
+    ) -> float | None:
+        """
+        Get exchange rate from API using async HTTP.
+
+        Args:
+            from_currency: Source currency code
+            to_currency: Target currency code
+
+        Returns:
+            Exchange rate or None if failed
+        """
+        cache_key = f"{from_currency}_{to_currency}"
+
+        # Check cache
+        if cache_key in self.cache:
+            cached_data, cached_time = self.cache[cache_key]
+            if datetime.now() - cached_time < timedelta(seconds=self.cache_ttl):
+                return cached_data.get(to_currency)
+
+        # Fetch from API async
+        try:
+            url = f"{self.api_url}{from_currency}"
+            async with httpx.AsyncClient() as client:
+                response = await client.get(url, timeout=5)
+                response.raise_for_status()
+
+                data = response.json()
+                rates = data.get("rates", {})
+
+                # Cache the result
+                self.cache[cache_key] = (rates, datetime.now())
+
+                return rates.get(to_currency)
+
+        except Exception as e:
+            print(f"API error: {e}")
+            return None
