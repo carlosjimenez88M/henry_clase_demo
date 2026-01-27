@@ -1,8 +1,8 @@
 {
   "dependencies": ["."],
   "graphs": {
-    "pink_floyd_react_agent": "./src/agents/langgraph_react_agent.py:create_langgraph_react_agent",
-    "cinema_react_agent": "./src/agents/langgraph_react_agent.py:create_langgraph_react_agent"
+    "pink_floyd_react_agent": "./src/agents/langgraph_entrypoints.py:pink_floyd_react_agent",
+    "cinema_react_agent": "./src/agents/langgraph_entrypoints.py:cinema_react_agent"
   },
   "env": ".env"
 }
