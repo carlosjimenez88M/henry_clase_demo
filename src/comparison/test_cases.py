@@ -4,11 +4,10 @@ Test cases for model comparison.
 This module defines standard test queries for comparing different models.
 """
 
-from typing import List, Dict, Any
-
+from typing import Any
 
 # Standard test queries for model comparison
-TEST_QUERIES: List[Dict[str, Any]] = [
+TEST_QUERIES: list[dict[str, Any]] = [
     {
         "id": 1,
         "query": "Find melancholic Pink Floyd songs",
@@ -68,27 +67,29 @@ TEST_QUERIES: List[Dict[str, Any]] = [
 ]
 
 
-def get_all_test_cases() -> List[Dict[str, Any]]:
+def get_all_test_cases() -> list[dict[str, Any]]:
     """Get all test cases."""
     return TEST_QUERIES
 
 
-def get_test_cases_by_category(category: str) -> List[Dict[str, Any]]:
+def get_test_cases_by_category(category: str) -> list[dict[str, Any]]:
     """Get test cases filtered by category."""
     return [tc for tc in TEST_QUERIES if tc["category"] == category]
 
 
-def get_simple_test_cases() -> List[Dict[str, Any]]:
+def get_simple_test_cases() -> list[dict[str, Any]]:
     """Get simple test cases (single tool, straightforward)."""
     return [
-        tc for tc in TEST_QUERIES
+        tc
+        for tc in TEST_QUERIES
         if tc["category"] in ["database_simple", "currency_simple"]
     ]
 
 
-def get_complex_test_cases() -> List[Dict[str, Any]]:
+def get_complex_test_cases() -> list[dict[str, Any]]:
     """Get complex test cases (multi-step reasoning, multiple tools)."""
     return [
-        tc for tc in TEST_QUERIES
+        tc
+        for tc in TEST_QUERIES
         if tc["category"] in ["database_complex", "multi_tool"]
     ]

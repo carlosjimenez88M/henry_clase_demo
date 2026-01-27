@@ -14,7 +14,7 @@ import streamlit as st
 from dashboard.history_manager import HistoryManager
 
 # Page config
-st.set_page_config(page_title="Live Agent", page_icon="🔷", layout="wide")
+st.set_page_config(page_title="Live Agent", page_icon="◆", layout="wide")
 
 # Title
 st.title("Live Agent Interaction")

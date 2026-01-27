@@ -5,12 +5,12 @@ Replaces unbounded in-memory dictionary with SQLite-backed storage
 to prevent memory leaks and enable persistence across restarts.
 """
 
-import sqlite3
 import json
-from pathlib import Path
-from typing import Optional, Dict, Any, List
-from datetime import datetime, timedelta
+import sqlite3
 from contextlib import contextmanager
+from datetime import datetime, timedelta
+from pathlib import Path
+from typing import Any
 
 from api.core.logger import logger
 
@@ -26,7 +26,9 @@ class ExecutionStore:
     - Thread-safe with context managers
     """
 
-    def __init__(self, db_path: str = "data/execution_history.db", retention_days: int = 30):
+    def __init__(
+        self, db_path: str = "data/execution_history.db", retention_days: int = 30
+    ):
         """
         Initialize execution store.
 
@@ -95,7 +97,7 @@ class ExecutionStore:
         finally:
             conn.close()
 
-    def save_execution(self, execution_result: Dict[str, Any]) -> bool:
+    def save_execution(self, execution_result: dict[str, Any]) -> bool:
         """
         Save execution result to database.
 
@@ -127,22 +129,41 @@ class ExecutionStore:
                 total_tokens = tokens.get("total", 0)
 
                 # Serialize complex fields
-                reasoning_trace = json.dumps(execution_result.get("reasoning_trace", []))
+                reasoning_trace = json.dumps(
+                    execution_result.get("reasoning_trace", [])
+                )
                 metrics_json = json.dumps(metrics)
-                metadata_json = json.dumps(execution_result.get("metadata")) if "metadata" in execution_result else None
+                metadata_json = (
+                    json.dumps(execution_result.get("metadata"))
+                    if "metadata" in execution_result
+                    else None
+                )
 
                 # Insert or replace
-                cursor.execute("""
+                cursor.execute(
+                    """
                 INSERT OR REPLACE INTO executions (
                     execution_id, query, answer, model, agent_type,
                     execution_time_seconds, estimated_cost_usd, total_tokens,
                     num_steps, timestamp, reasoning_trace, metrics, metadata
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """, (
-                    execution_id, query, answer, model, agent_type,
-                    execution_time, estimated_cost, total_tokens,
-                    num_steps, timestamp, reasoning_trace, metrics_json, metadata_json
-                ))
+                """,
+                    (
+                        execution_id,
+                        query,
+                        answer,
+                        model,
+                        agent_type,
+                        execution_time,
+                        estimated_cost,
+                        total_tokens,
+                        num_steps,
+                        timestamp,
+                        reasoning_trace,
+                        metrics_json,
+                        metadata_json,
+                    ),
+                )
 
                 conn.commit()
                 logger.debug(f"Saved execution {execution_id} to store")
@@ -152,7 +173,7 @@ class ExecutionStore:
             logger.error(f"Failed to save execution: {e}")
             return False
 
-    def get_execution(self, execution_id: str) -> Optional[Dict[str, Any]]:
+    def get_execution(self, execution_id: str) -> dict[str, Any] | None:
         """
         Retrieve execution by ID.
 
@@ -166,9 +187,12 @@ class ExecutionStore:
             with self._get_connection() as conn:
                 cursor = conn.cursor()
 
-                cursor.execute("""
+                cursor.execute(
+                    """
                 SELECT * FROM executions WHERE execution_id = ?
-                """, (execution_id,))
+                """,
+                    (execution_id,),
+                )
 
                 row = cursor.fetchone()
 
@@ -181,7 +205,7 @@ class ExecutionStore:
             logger.error(f"Failed to retrieve execution {execution_id}: {e}")
             return None
 
-    def get_recent_executions(self, limit: int = 50) -> List[Dict[str, Any]]:
+    def get_recent_executions(self, limit: int = 50) -> list[dict[str, Any]]:
         """
         Get recent execution summaries.
 
@@ -195,14 +219,17 @@ class ExecutionStore:
             with self._get_connection() as conn:
                 cursor = conn.cursor()
 
-                cursor.execute("""
+                cursor.execute(
+                    """
                 SELECT
                     execution_id, query, timestamp, model, agent_type,
                     execution_time_seconds, estimated_cost_usd, num_steps
                 FROM executions
                 ORDER BY timestamp DESC
                 LIMIT ?
-                """, (limit,))
+                """,
+                    (limit,),
+                )
 
                 rows = cursor.fetchall()
 
@@ -215,7 +242,7 @@ class ExecutionStore:
                         "agent_type": row["agent_type"],
                         "execution_time": row["execution_time_seconds"],
                         "estimated_cost": row["estimated_cost_usd"],
-                        "num_steps": row["num_steps"]
+                        "num_steps": row["num_steps"],
                     }
                     for row in rows
                 ]
@@ -238,9 +265,12 @@ class ExecutionStore:
             with self._get_connection() as conn:
                 cursor = conn.cursor()
 
-                cursor.execute("""
+                cursor.execute(
+                    """
                 DELETE FROM executions WHERE timestamp < ?
-                """, (cutoff_str,))
+                """,
+                    (cutoff_str,),
+                )
 
                 deleted_count = cursor.rowcount
                 conn.commit()
@@ -254,7 +284,7 @@ class ExecutionStore:
             logger.error(f"Failed to cleanup old executions: {e}")
             return 0
 
-    def get_statistics(self) -> Dict[str, Any]:
+    def get_statistics(self) -> dict[str, Any]:
         """
         Get storage statistics.
 
@@ -270,11 +300,15 @@ class ExecutionStore:
                 total = cursor.fetchone()["total"]
 
                 # Total cost
-                cursor.execute("SELECT SUM(estimated_cost_usd) as total_cost FROM executions")
+                cursor.execute(
+                    "SELECT SUM(estimated_cost_usd) as total_cost FROM executions"
+                )
                 total_cost = cursor.fetchone()["total_cost"] or 0.0
 
                 # Total tokens
-                cursor.execute("SELECT SUM(total_tokens) as total_tokens FROM executions")
+                cursor.execute(
+                    "SELECT SUM(total_tokens) as total_tokens FROM executions"
+                )
                 total_tokens = cursor.fetchone()["total_tokens"] or 0
 
                 # By model
@@ -291,7 +325,9 @@ class ExecutionStore:
                 FROM executions
                 GROUP BY agent_type
                 """)
-                by_agent_type = {row["agent_type"]: row["count"] for row in cursor.fetchall()}
+                by_agent_type = {
+                    row["agent_type"]: row["count"] for row in cursor.fetchall()
+                }
 
                 # Database size
                 db_size = self.db_path.stat().st_size if self.db_path.exists() else 0
@@ -304,7 +340,7 @@ class ExecutionStore:
                     "by_agent_type": by_agent_type,
                     "database_size_bytes": db_size,
                     "database_size_mb": round(db_size / (1024 * 1024), 2),
-                    "retention_days": self.retention_days
+                    "retention_days": self.retention_days,
                 }
 
         except Exception as e:
@@ -331,7 +367,7 @@ class ExecutionStore:
             logger.error(f"Failed to clear executions: {e}")
             return False
 
-    def _row_to_dict(self, row: sqlite3.Row) -> Dict[str, Any]:
+    def _row_to_dict(self, row: sqlite3.Row) -> dict[str, Any]:
         """Convert database row to execution result dictionary."""
         return {
             "execution_id": row["execution_id"],
@@ -340,7 +376,7 @@ class ExecutionStore:
             "reasoning_trace": json.loads(row["reasoning_trace"]),
             "metrics": json.loads(row["metrics"]),
             "timestamp": row["timestamp"],
-            "metadata": json.loads(row["metadata"]) if row["metadata"] else None
+            "metadata": json.loads(row["metadata"]) if row["metadata"] else None,
         }
 
     def vacuum(self):

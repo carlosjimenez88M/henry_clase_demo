@@ -5,17 +5,16 @@ This module provides a factory pattern for creating agents with different
 OpenAI models and configurations. Supports both standard ReAct and CoT-enhanced agents.
 """
 
-from typing import List, Optional, Literal
+from typing import Literal
 
 from langchain.tools import BaseTool
 
-from src.agents.react_agent import create_react_agent
-from src.agents.cot_agent import create_cot_agent, CoTReActAgent
+from src.agents.cot_agent import CoTReActAgent, create_cot_agent
 from src.agents.langgraph_react_agent import create_langgraph_react_agent
+from src.agents.react_agent import create_react_agent
 from src.config import config
 from src.tools.currency_tool import CurrencyPriceTool
 from src.tools.database_tool import PinkFloydDatabaseTool
-
 
 AgentType = Literal["react", "cot", "langgraph_react"]
 
@@ -39,20 +38,17 @@ class AgentFactory:
         self.tools = self._initialize_tools()
         self.default_agent_type = default_agent_type
 
-    def _initialize_tools(self) -> List[BaseTool]:
+    def _initialize_tools(self) -> list[BaseTool]:
         """Initialize the tools available to agents."""
-        return [
-            PinkFloydDatabaseTool(),
-            CurrencyPriceTool()
-        ]
+        return [PinkFloydDatabaseTool(), CurrencyPriceTool()]
 
     def create_agent(
         self,
         model_name: str,
-        temperature: Optional[float] = None,
-        custom_tools: Optional[List[BaseTool]] = None,
-        agent_type: Optional[AgentType] = None,
-        use_adaptive_prompt: bool = True
+        temperature: float | None = None,
+        custom_tools: list[BaseTool] | None = None,
+        agent_type: AgentType | None = None,
+        use_adaptive_prompt: bool = True,
     ):
         """
         Create an agent with specified configuration.
@@ -84,7 +80,9 @@ class AgentFactory:
         tools = custom_tools if custom_tools is not None else self.tools
 
         # Determine agent type
-        agent_type_to_use = agent_type if agent_type is not None else self.default_agent_type
+        agent_type_to_use = (
+            agent_type if agent_type is not None else self.default_agent_type
+        )
 
         # Create appropriate agent type
         if agent_type_to_use == "cot":
@@ -92,19 +90,15 @@ class AgentFactory:
                 model_name=model_name,
                 tools=tools,
                 temperature=temp,
-                use_adaptive_prompt=use_adaptive_prompt
+                use_adaptive_prompt=use_adaptive_prompt,
             )
         elif agent_type_to_use == "react":
             agent = create_react_agent(
-                model_name=model_name,
-                tools=tools,
-                temperature=temp
+                model_name=model_name, tools=tools, temperature=temp
             )
         elif agent_type_to_use == "langgraph_react":
             agent = create_langgraph_react_agent(
-                model_name=model_name,
-                tools=tools,
-                temperature=temp
+                model_name=model_name, tools=tools, temperature=temp
             )
         else:
             raise ValueError(
@@ -130,19 +124,19 @@ class AgentFactory:
 
         return agents
 
-    def get_tools(self) -> List[BaseTool]:
+    def get_tools(self) -> list[BaseTool]:
         """Get list of available tools."""
         return self.tools
 
-    def get_supported_models(self) -> List[str]:
+    def get_supported_models(self) -> list[str]:
         """Get list of supported models."""
         return self.SUPPORTED_MODELS
 
     def create_cot_agent(
         self,
         model_name: str,
-        temperature: Optional[float] = None,
-        use_adaptive_prompt: bool = True
+        temperature: float | None = None,
+        use_adaptive_prompt: bool = True,
     ) -> CoTReActAgent:
         """
         Convenience method to create a CoT agent.
@@ -159,14 +153,10 @@ class AgentFactory:
             model_name=model_name,
             temperature=temperature,
             agent_type="cot",
-            use_adaptive_prompt=use_adaptive_prompt
+            use_adaptive_prompt=use_adaptive_prompt,
         )
 
-    def create_react_agent(
-        self,
-        model_name: str,
-        temperature: Optional[float] = None
-    ):
+    def create_react_agent(self, model_name: str, temperature: float | None = None):
         """
         Convenience method to create a standard ReAct agent.
 
@@ -178,7 +168,5 @@ class AgentFactory:
             Standard ReAct agent
         """
         return self.create_agent(
-            model_name=model_name,
-            temperature=temperature,
-            agent_type="react"
+            model_name=model_name, temperature=temperature, agent_type="react"
         )

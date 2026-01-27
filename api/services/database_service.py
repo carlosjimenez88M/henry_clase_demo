@@ -3,11 +3,11 @@
 from pathlib import Path
 from typing import Any
 
+from api.core.config import get_settings
+from api.core.errors import DatabaseError
+from api.core.logger import logger
 from src.database.db_manager import DatabaseManager
 from src.database.schema import Song
-from api.core.logger import logger
-from api.core.errors import DatabaseError
-from api.core.config import get_settings
 
 
 class DatabaseService:
@@ -31,7 +31,7 @@ class DatabaseService:
         offset: int = 0,
         mood: str | None = None,
         album: str | None = None,
-        year: int | None = None
+        year: int | None = None,
     ) -> dict[str, Any]:
         """
         Get songs with pagination and filtering.
@@ -62,7 +62,7 @@ class DatabaseService:
 
             # Apply pagination
             total = len(songs)
-            paginated_songs = songs[offset:offset + limit]
+            paginated_songs = songs[offset : offset + limit]
 
             # Convert to dictionaries
             song_dicts = [self._song_to_dict(song) for song in paginated_songs]
@@ -71,7 +71,7 @@ class DatabaseService:
                 "total": total,
                 "songs": song_dicts,
                 "limit": limit,
-                "offset": offset
+                "offset": offset,
             }
 
         except Exception as e:
@@ -87,7 +87,7 @@ class DatabaseService:
         year_min: int | None = None,
         year_max: int | None = None,
         limit: int = 10,
-        offset: int = 0
+        offset: int = 0,
     ) -> dict[str, Any]:
         """
         Search songs with multiple criteria.
@@ -134,7 +134,7 @@ class DatabaseService:
 
             # Apply pagination
             total = len(songs)
-            paginated_songs = songs[offset:offset + limit]
+            paginated_songs = songs[offset : offset + limit]
 
             # Convert to dictionaries
             song_dicts = [self._song_to_dict(song) for song in paginated_songs]
@@ -145,7 +145,7 @@ class DatabaseService:
                 "total": total,
                 "songs": song_dicts,
                 "limit": limit,
-                "offset": offset
+                "offset": offset,
             }
 
         except Exception as e:
@@ -178,10 +178,10 @@ class DatabaseService:
                 "total_albums": len(albums),
                 "year_range": {
                     "min": min(years) if years else 0,
-                    "max": max(years) if years else 0
+                    "max": max(years) if years else 0,
                 },
                 "moods": mood_stats,
-                "albums": albums
+                "albums": albums,
             }
 
         except Exception as e:
@@ -202,10 +202,7 @@ class DatabaseService:
             mood_stats = self.db_manager.get_mood_statistics()
             moods = list(mood_stats.keys())
 
-            return {
-                "moods": sorted(moods),
-                "total": len(moods)
-            }
+            return {"moods": sorted(moods), "total": len(moods)}
 
         except Exception as e:
             logger.error(f"Failed to get moods: {e}")
@@ -225,10 +222,7 @@ class DatabaseService:
             all_songs = self.db_manager.get_all_songs(limit=None)
             albums = sorted(set(song.album for song in all_songs))
 
-            return {
-                "albums": albums,
-                "total": len(albums)
-            }
+            return {"albums": albums, "total": len(albums)}
 
         except Exception as e:
             logger.error(f"Failed to get albums: {e}")
@@ -243,5 +237,5 @@ class DatabaseService:
             "album": song.album,
             "year": song.year,
             "mood": song.mood,
-            "lyrics": song.lyrics
+            "lyrics": song.lyrics,
         }

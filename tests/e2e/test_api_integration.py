@@ -4,10 +4,10 @@ E2E Tests for API Integration.
 Tests the complete API workflow including security features.
 """
 
-import pytest
-import httpx
 import time
 
+import httpx
+import pytest
 
 BASE_URL = "http://localhost:8000"
 
@@ -45,9 +45,9 @@ class TestAPIIntegration:
                     "query": "Find melancholic songs",
                     "model": "gpt-4o-mini",
                     "temperature": 0.1,
-                    "max_iterations": 5
+                    "max_iterations": 5,
                 },
-                timeout=60.0
+                timeout=60.0,
             )
             assert response.status_code == 200
             data = response.json()
@@ -65,15 +65,13 @@ class TestAPIIntegration:
                 "query": "Find psychedelic songs",
                 "model": "gpt-4o-mini",
                 "temperature": 0.1,
-                "max_iterations": 5
+                "max_iterations": 5,
             }
 
             # First request (uncached)
             start1 = time.time()
             response1 = httpx.post(
-                f"{BASE_URL}/api/v1/agent/query",
-                json=query_data,
-                timeout=60.0
+                f"{BASE_URL}/api/v1/agent/query", json=query_data, timeout=60.0
             )
             time1 = time.time() - start1
 
@@ -84,9 +82,7 @@ class TestAPIIntegration:
             # Second request (should be cached)
             start2 = time.time()
             response2 = httpx.post(
-                f"{BASE_URL}/api/v1/agent/query",
-                json=query_data,
-                timeout=60.0
+                f"{BASE_URL}/api/v1/agent/query", json=query_data, timeout=60.0
             )
             time2 = time.time() - start2
 
@@ -103,9 +99,7 @@ class TestAPIIntegration:
         """Test history retrieval."""
         try:
             response = httpx.get(
-                f"{BASE_URL}/api/v1/agent/history",
-                params={"limit": 10},
-                timeout=10.0
+                f"{BASE_URL}/api/v1/agent/history", params={"limit": 10}, timeout=10.0
             )
             assert response.status_code == 200
             data = response.json()
@@ -144,10 +138,7 @@ class TestAPIIntegration:
             # Make many requests quickly
             responses = []
             for i in range(65):  # More than 60/min limit
-                response = httpx.get(
-                    f"{BASE_URL}/health",
-                    timeout=5.0
-                )
+                response = httpx.get(f"{BASE_URL}/health", timeout=5.0)
                 responses.append(response.status_code)
 
             # At least one should be rate limited (429)
@@ -176,7 +167,9 @@ class TestAPIIntegration:
 
             headers = response.headers
             # Check for security headers
-            assert "X-Content-Type-Options" in headers or True  # May not be on all endpoints
+            assert (
+                "X-Content-Type-Options" in headers or True
+            )  # May not be on all endpoints
             # More security headers checks could be added
         except httpx.ConnectError:
             pytest.skip("API not running")

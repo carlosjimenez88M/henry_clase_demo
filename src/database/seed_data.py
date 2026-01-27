@@ -5,10 +5,9 @@ This module contains curated data for 28 iconic Pink Floyd songs across their
 most famous albums, with mood classifications and lyrics snippets.
 """
 
-from typing import List, Dict, Any
+from typing import Any
 
-
-PINK_FLOYD_SONGS: List[Dict[str, Any]] = [
+PINK_FLOYD_SONGS: list[dict[str, Any]] = [
     # The Dark Side of the Moon (1973)
     {
         "title": "Time",
@@ -271,24 +270,21 @@ PINK_FLOYD_SONGS: List[Dict[str, Any]] = [
 ]
 
 
-def get_all_songs() -> List[Dict[str, Any]]:
+def get_all_songs() -> list[dict[str, Any]]:
     """Get all Pink Floyd songs data."""
     return PINK_FLOYD_SONGS
 
 
-def get_songs_by_mood(mood: str) -> List[Dict[str, Any]]:
+def get_songs_by_mood(mood: str) -> list[dict[str, Any]]:
     """Get songs filtered by mood."""
     return [song for song in PINK_FLOYD_SONGS if song["mood"].lower() == mood.lower()]
 
 
-def get_songs_by_album(album: str) -> List[Dict[str, Any]]:
+def get_songs_by_album(album: str) -> list[dict[str, Any]]:
     """Get songs filtered by album."""
-    return [
-        song for song in PINK_FLOYD_SONGS
-        if album.lower() in song["album"].lower()
-    ]
+    return [song for song in PINK_FLOYD_SONGS if album.lower() in song["album"].lower()]
 
 
-def get_songs_by_year(year: int) -> List[Dict[str, Any]]:
+def get_songs_by_year(year: int) -> list[dict[str, Any]]:
     """Get songs filtered by year."""
     return [song for song in PINK_FLOYD_SONGS if song["year"] == year]

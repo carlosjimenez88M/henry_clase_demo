@@ -6,7 +6,6 @@ and managing model configurations.
 """
 
 from pathlib import Path
-from typing import Dict
 
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -24,31 +23,34 @@ class Config(BaseSettings):
     """Main configuration class for the application."""
 
     model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
-        case_sensitive=False,
-        extra="allow"
+        env_file=".env", env_file_encoding="utf-8", case_sensitive=False, extra="allow"
     )
 
     # OpenAI API
     openai_api_key: str = Field(..., description="OpenAI API key")
 
     # Model configurations
-    default_model: str = Field(default="gpt-4o-mini", description="Default model to use")
-    temperature: float = Field(default=0.1, description="Temperature for model responses")
-    max_tokens: int = Field(default=1000, description="Maximum tokens for model responses")
-    
+    default_model: str = Field(
+        default="gpt-4o-mini", description="Default model to use"
+    )
+    temperature: float = Field(
+        default=0.1, description="Temperature for model responses"
+    )
+    max_tokens: int = Field(
+        default=1000, description="Maximum tokens for model responses"
+    )
+
     # Database
     database_path: Path = Field(
         default=Path(__file__).parent.parent / "data" / "pink_floyd_songs.db",
-        description="Path to SQLite database"
+        description="Path to SQLite database",
     )
 
     # Logging
     log_level: str = Field(default="INFO", description="Logging level")
     log_file: Path = Field(
         default=Path(__file__).parent.parent / "logs" / "app.log",
-        description="Path to log file"
+        description="Path to log file",
     )
 
     @field_validator("openai_api_key")
@@ -69,24 +71,22 @@ class Config(BaseSettings):
         return v
 
     @property
-    def models(self) -> Dict[str, ModelConfig]:
+    def models(self) -> dict[str, ModelConfig]:
         """Get configurations for all supported models."""
         return {
             "gpt-4o-mini": ModelConfig(
                 name="gpt-4o-mini",
                 temperature=self.temperature,
-                max_tokens=self.max_tokens
+                max_tokens=self.max_tokens,
             ),
             "gpt-4o": ModelConfig(
-                name="gpt-4o",
-                temperature=self.temperature,
-                max_tokens=self.max_tokens
+                name="gpt-4o", temperature=self.temperature, max_tokens=self.max_tokens
             ),
             "gpt-5-nano": ModelConfig(
                 name="gpt-5-nano",
                 temperature=self.temperature,
-                max_tokens=self.max_tokens
-            )
+                max_tokens=self.max_tokens,
+            ),
         }
 
     def get_model_config(self, model_name: str) -> ModelConfig:

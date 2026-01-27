@@ -1,16 +1,16 @@
 """Database endpoints for Pink Floyd songs."""
 
-from fastapi import APIRouter, HTTPException, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 
+from api.core.logger import logger
 from api.schemas.database import (
-    SongListResponse,
-    SongSearchRequest,
+    AlbumListResponse,
     DatabaseStats,
     MoodListResponse,
-    AlbumListResponse
+    SongListResponse,
+    SongSearchRequest,
 )
 from api.services.database_service import DatabaseService
-from api.core.logger import logger
 
 router = APIRouter()
 
@@ -27,7 +27,7 @@ async def get_songs(
     mood: str | None = Query(default=None, description="Filter by mood"),
     album: str | None = Query(default=None, description="Filter by album"),
     year: int | None = Query(default=None, description="Filter by year"),
-    service: DatabaseService = Depends(get_database_service)
+    service: DatabaseService = Depends(get_database_service),
 ):
     """
     Get Pink Floyd songs with pagination and filtering.
@@ -43,11 +43,7 @@ async def get_songs(
     """
     try:
         result = service.get_songs(
-            limit=limit,
-            offset=offset,
-            mood=mood,
-            album=album,
-            year=year
+            limit=limit, offset=offset, mood=mood, album=album, year=year
         )
 
         return SongListResponse(**result)
@@ -55,15 +51,13 @@ async def get_songs(
     except Exception as e:
         logger.error(f"Failed to get songs: {e}")
         raise HTTPException(
-            status_code=500,
-            detail=f"Failed to retrieve songs: {str(e)}"
+            status_code=500, detail=f"Failed to retrieve songs: {str(e)}"
         )
 
 
 @router.post("/database/search", response_model=SongListResponse, tags=["Database"])
 async def search_songs(
-    request: SongSearchRequest,
-    service: DatabaseService = Depends(get_database_service)
+    request: SongSearchRequest, service: DatabaseService = Depends(get_database_service)
 ):
     """
     Search songs with multiple criteria.
@@ -95,17 +89,14 @@ async def search_songs(
             year_min=request.year_min,
             year_max=request.year_max,
             limit=request.limit,
-            offset=request.offset
+            offset=request.offset,
         )
 
         return SongListResponse(**result)
 
     except Exception as e:
         logger.error(f"Search failed: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Search failed: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Search failed: {str(e)}")
 
 
 @router.get("/database/stats", response_model=DatabaseStats, tags=["Database"])
@@ -126,8 +117,7 @@ async def get_database_stats(service: DatabaseService = Depends(get_database_ser
     except Exception as e:
         logger.error(f"Failed to get stats: {e}")
         raise HTTPException(
-            status_code=500,
-            detail=f"Failed to retrieve statistics: {str(e)}"
+            status_code=500, detail=f"Failed to retrieve statistics: {str(e)}"
         )
 
 
@@ -146,8 +136,7 @@ async def get_moods(service: DatabaseService = Depends(get_database_service)):
     except Exception as e:
         logger.error(f"Failed to get moods: {e}")
         raise HTTPException(
-            status_code=500,
-            detail=f"Failed to retrieve moods: {str(e)}"
+            status_code=500, detail=f"Failed to retrieve moods: {str(e)}"
         )
 
 
@@ -166,6 +155,5 @@ async def get_albums(service: DatabaseService = Depends(get_database_service)):
     except Exception as e:
         logger.error(f"Failed to get albums: {e}")
         raise HTTPException(
-            status_code=500,
-            detail=f"Failed to retrieve albums: {str(e)}"
+            status_code=500, detail=f"Failed to retrieve albums: {str(e)}"
         )

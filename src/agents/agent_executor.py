@@ -6,11 +6,10 @@ token counting, and cost estimation. Supports both standard ReAct and CoT agents
 """
 
 import time
-import asyncio
-from typing import Dict, Optional, Union, Any
+from typing import Any
 
-from src.agents.react_agent import run_agent
 from src.agents.cot_agent import CoTReActAgent, run_cot_agent
+from src.agents.react_agent import run_agent
 
 
 class AgentExecutor:
@@ -23,7 +22,7 @@ class AgentExecutor:
         "gpt-5-nano": {"input": 0.10, "output": 0.40},  # Estimated
     }
 
-    def __init__(self, agent: Union[Any, CoTReActAgent], model_name: str):
+    def __init__(self, agent: Any | CoTReActAgent, model_name: str):
         """
         Initialize agent executor.
 
@@ -36,7 +35,7 @@ class AgentExecutor:
         self.execution_history = []
         self.is_cot_agent = isinstance(agent, CoTReActAgent)
 
-    def execute(self, query: str) -> Dict:
+    async def execute(self, query: str) -> dict:
         """
         Execute a query through the agent and track metrics.
 
@@ -51,8 +50,8 @@ class AgentExecutor:
 
         # Run appropriate agent type
         if self.is_cot_agent:
-            # CoT agents are async, so we need to run in event loop
-            result = asyncio.run(run_cot_agent(self.agent, query))
+            # CoT agents are async, use await
+            result = await run_cot_agent(self.agent, query)
         else:
             # Standard ReAct agent (sync)
             result = run_agent(self.agent, query)
@@ -61,7 +60,9 @@ class AgentExecutor:
         execution_time = time.time() - start_time
 
         # Estimate tokens (rough approximation)
-        tokens = self._estimate_tokens(query, result["answer"], result["reasoning_trace"])
+        tokens = self._estimate_tokens(
+            query, result["answer"], result["reasoning_trace"]
+        )
 
         # Calculate cost
         cost = self._calculate_cost(tokens)
@@ -77,9 +78,9 @@ class AgentExecutor:
                 "estimated_tokens": tokens,
                 "estimated_cost_usd": cost,
                 "num_steps": len(result["reasoning_trace"]),
-                "agent_type": "cot" if self.is_cot_agent else "react"
+                "agent_type": "cot" if self.is_cot_agent else "react",
             },
-            "raw_messages": result.get("raw_messages", [])
+            "raw_messages": result.get("raw_messages", []),
         }
 
         # Add CoT-specific metadata if available
@@ -91,7 +92,7 @@ class AgentExecutor:
 
         return execution_result
 
-    def _estimate_tokens(self, query: str, answer: str, trace: list) -> Dict[str, int]:
+    def _estimate_tokens(self, query: str, answer: str, trace: list) -> dict[str, int]:
         """
         Estimate token usage (rough approximation).
 
@@ -115,18 +116,14 @@ class AgentExecutor:
         # Count characters in answer
         output_chars = len(answer)
 
-        # Rough conversion: 4 chars �� 1 token
+        # Rough conversion: 4 chars = 1 token
         input_tokens = input_chars // 4
         output_tokens = output_chars // 4
         total_tokens = input_tokens + output_tokens
 
-        return {
-            "input": input_tokens,
-            "output": output_tokens,
-            "total": total_tokens
-        }
+        return {"input": input_tokens, "output": output_tokens, "total": total_tokens}
 
-    def _calculate_cost(self, tokens: Dict[str, int]) -> float:
+    def _calculate_cost(self, tokens: dict[str, int]) -> float:
         """
         Calculate estimated cost based on token usage.
 
@@ -151,7 +148,7 @@ class AgentExecutor:
         """Get execution history."""
         return self.execution_history
 
-    def get_last_result(self) -> Optional[Dict]:
+    def get_last_result(self) -> dict | None:
         """Get last execution result."""
         if self.execution_history:
             return self.execution_history[-1]
@@ -161,14 +158,20 @@ class AgentExecutor:
         """Clear execution history."""
         self.execution_history = []
 
-    def get_metrics_summary(self) -> Dict:
+    def get_metrics_summary(self) -> dict:
         """Get summary of metrics across all executions."""
         if not self.execution_history:
             return {}
 
-        total_time = sum(r["metrics"]["execution_time_seconds"] for r in self.execution_history)
-        total_tokens = sum(r["metrics"]["estimated_tokens"]["total"] for r in self.execution_history)
-        total_cost = sum(r["metrics"]["estimated_cost_usd"] for r in self.execution_history)
+        total_time = sum(
+            r["metrics"]["execution_time_seconds"] for r in self.execution_history
+        )
+        total_tokens = sum(
+            r["metrics"]["estimated_tokens"]["total"] for r in self.execution_history
+        )
+        total_cost = sum(
+            r["metrics"]["estimated_cost_usd"] for r in self.execution_history
+        )
 
         return {
             "num_executions": len(self.execution_history),

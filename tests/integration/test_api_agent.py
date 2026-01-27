@@ -1,6 +1,5 @@
 """Integration tests for agent endpoints."""
 
-import pytest
 from fastapi.testclient import TestClient
 
 
@@ -42,10 +41,7 @@ def test_get_execution_detail_not_found(api_client: TestClient):
 
 def test_agent_query_validation_empty_query(api_client: TestClient):
     """Test agent query with empty query (should fail validation)."""
-    request_data = {
-        "query": "",
-        "model": "gpt-4o-mini"
-    }
+    request_data = {"query": "", "model": "gpt-4o-mini"}
 
     response = api_client.post("/api/v1/agent/query", json=request_data)
 
@@ -58,7 +54,7 @@ def test_agent_query_validation_temperature(api_client: TestClient):
     request_data = {
         "query": "test",
         "model": "gpt-4o-mini",
-        "temperature": 2.0  # Should be 0.0-1.0
+        "temperature": 2.0,  # Should be 0.0-1.0
     }
 
     response = api_client.post("/api/v1/agent/query", json=request_data)

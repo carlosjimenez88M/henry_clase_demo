@@ -1,14 +1,14 @@
 """Model comparison endpoints."""
 
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, Depends, HTTPException
 
+from api.core.logger import logger
 from api.schemas.comparison import (
+    ComparisonListResponse,
     ComparisonRequest,
     ComparisonResponse,
-    ComparisonListResponse
 )
 from api.services.comparison_service import ComparisonService
-from api.core.logger import logger
 
 router = APIRouter()
 
@@ -21,7 +21,7 @@ def get_comparison_service():
 @router.post("/comparison/run", response_model=ComparisonResponse, tags=["Comparison"])
 async def run_comparison(
     request: ComparisonRequest,
-    service: ComparisonService = Depends(get_comparison_service)
+    service: ComparisonService = Depends(get_comparison_service),
 ):
     """
     Run performance comparison between multiple AI models.
@@ -45,24 +45,28 @@ async def run_comparison(
     try:
         result = await service.run_comparison(
             models=request.models,
-            test_cases=[tc.model_dump() for tc in request.test_cases] if request.test_cases else None,
-            verbose=request.verbose
+            test_cases=(
+                [tc.model_dump() for tc in request.test_cases]
+                if request.test_cases
+                else None
+            ),
+            verbose=request.verbose,
         )
 
         return ComparisonResponse(**result)
 
     except Exception as e:
         logger.error(f"Comparison failed: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Comparison failed: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Comparison failed: {str(e)}")
 
 
-@router.get("/comparison/{comparison_id}", response_model=ComparisonResponse, tags=["Comparison"])
+@router.get(
+    "/comparison/{comparison_id}",
+    response_model=ComparisonResponse,
+    tags=["Comparison"],
+)
 async def get_comparison_result(
-    comparison_id: str,
-    service: ComparisonService = Depends(get_comparison_service)
+    comparison_id: str, service: ComparisonService = Depends(get_comparison_service)
 ):
     """
     Get comparison result by ID.
@@ -77,8 +81,7 @@ async def get_comparison_result(
 
         if not result:
             raise HTTPException(
-                status_code=404,
-                detail=f"Comparison {comparison_id} not found"
+                status_code=404, detail=f"Comparison {comparison_id} not found"
             )
 
         return ComparisonResponse(**result)
@@ -88,15 +91,15 @@ async def get_comparison_result(
     except Exception as e:
         logger.error(f"Failed to get comparison: {e}")
         raise HTTPException(
-            status_code=500,
-            detail=f"Failed to retrieve comparison: {str(e)}"
+            status_code=500, detail=f"Failed to retrieve comparison: {str(e)}"
         )
 
 
-@router.get("/comparison/list", response_model=ComparisonListResponse, tags=["Comparison"])
+@router.get(
+    "/comparison/list", response_model=ComparisonListResponse, tags=["Comparison"]
+)
 async def list_comparisons(
-    limit: int = 50,
-    service: ComparisonService = Depends(get_comparison_service)
+    limit: int = 50, service: ComparisonService = Depends(get_comparison_service)
 ):
     """
     List recent comparisons.
@@ -111,6 +114,5 @@ async def list_comparisons(
     except Exception as e:
         logger.error(f"Failed to list comparisons: {e}")
         raise HTTPException(
-            status_code=500,
-            detail=f"Failed to retrieve comparison list: {str(e)}"
+            status_code=500, detail=f"Failed to retrieve comparison list: {str(e)}"
         )

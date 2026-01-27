@@ -5,7 +5,6 @@ This module handles database initialization, seeding, and querying operations.
 """
 
 from pathlib import Path
-from typing import List, Optional
 
 from sqlalchemy import create_engine, or_
 from sqlalchemy.orm import Session, sessionmaker
@@ -44,7 +43,7 @@ class DatabaseManager:
                 self._seed_data(session)
                 print(f" Database initialized with {len(PINK_FLOYD_SONGS)} songs")
             else:
-                print(f"✓ Database already contains {count} songs")
+                print(f"Database already contains {count} songs")
 
     def _seed_data(self, session: Session) -> None:
         """Seed database with Pink Floyd songs."""
@@ -53,7 +52,7 @@ class DatabaseManager:
             session.add(song)
         session.commit()
 
-    def get_all_songs(self, limit: Optional[int] = None) -> List[Song]:
+    def get_all_songs(self, limit: int | None = None) -> list[Song]:
         """Get all songs, optionally limited."""
         with self.SessionLocal() as session:
             query = session.query(Song)
@@ -61,36 +60,33 @@ class DatabaseManager:
                 query = query.limit(limit)
             return query.all()
 
-    def get_songs_by_mood(self, mood: str) -> List[Song]:
+    def get_songs_by_mood(self, mood: str) -> list[Song]:
         """Get songs by mood."""
         with self.SessionLocal() as session:
-            return session.query(Song).filter(
-                Song.mood.ilike(f"%{mood}%")
-            ).all()
+            return session.query(Song).filter(Song.mood.ilike(f"%{mood}%")).all()
 
-    def get_songs_by_album(self, album: str) -> List[Song]:
+    def get_songs_by_album(self, album: str) -> list[Song]:
         """Get songs by album name (partial match)."""
         with self.SessionLocal() as session:
-            return session.query(Song).filter(
-                Song.album.ilike(f"%{album}%")
-            ).all()
+            return session.query(Song).filter(Song.album.ilike(f"%{album}%")).all()
 
-    def get_songs_by_year(self, year: int) -> List[Song]:
+    def get_songs_by_year(self, year: int) -> list[Song]:
         """Get songs by year."""
         with self.SessionLocal() as session:
             return session.query(Song).filter(Song.year == year).all()
 
-    def get_songs_by_decade(self, decade: int) -> List[Song]:
+    def get_songs_by_decade(self, decade: int) -> list[Song]:
         """Get songs by decade (e.g., 1970 for 1970s)."""
         start_year = decade
         end_year = decade + 9
         with self.SessionLocal() as session:
-            return session.query(Song).filter(
-                Song.year >= start_year,
-                Song.year <= end_year
-            ).all()
+            return (
+                session.query(Song)
+                .filter(Song.year >= start_year, Song.year <= end_year)
+                .all()
+            )
 
-    def search_lyrics(self, keywords: str) -> List[Song]:
+    def search_lyrics(self, keywords: str) -> list[Song]:
         """Search songs by lyrics keywords."""
         with self.SessionLocal() as session:
             # Split keywords and search for any of them
@@ -99,11 +95,8 @@ class DatabaseManager:
             return session.query(Song).filter(or_(*conditions)).all()
 
     def search_songs(
-        self,
-        query: str,
-        mood: Optional[str] = None,
-        album: Optional[str] = None
-    ) -> List[Song]:
+        self, query: str, mood: str | None = None, album: str | None = None
+    ) -> list[Song]:
         """
         General search across title, album, lyrics.
 
@@ -116,7 +109,7 @@ class DatabaseManager:
             filters = or_(
                 Song.title.ilike(f"%{query}%"),
                 Song.album.ilike(f"%{query}%"),
-                Song.lyrics.ilike(f"%{query}%")
+                Song.lyrics.ilike(f"%{query}%"),
             )
 
             db_query = session.query(Song).filter(filters)
@@ -129,12 +122,10 @@ class DatabaseManager:
 
             return db_query.all()
 
-    def get_song_by_title(self, title: str) -> Optional[Song]:
+    def get_song_by_title(self, title: str) -> Song | None:
         """Get a specific song by title."""
         with self.SessionLocal() as session:
-            return session.query(Song).filter(
-                Song.title.ilike(f"%{title}%")
-            ).first()
+            return session.query(Song).filter(Song.title.ilike(f"%{title}%")).first()
 
     def get_mood_statistics(self) -> dict:
         """Get statistics about songs by mood."""

@@ -15,15 +15,15 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from api.routers import health, agent, database, comparison, metrics
+from api.core.config import get_settings
+from api.core.logger import log_error, log_success, logger
 from api.middleware import (
     log_requests,
     rate_limit_middleware,
     security_headers_middleware,
-    timeout_middleware
+    timeout_middleware,
 )
-from api.core.logger import logger, log_success, log_error
-from api.core.config import get_settings
+from api.routers import agent, comparison, database, health, metrics
 
 
 @asynccontextmanager
@@ -43,9 +43,9 @@ async def lifespan(app: FastAPI):
     settings = get_settings()
 
     # Startup
-    logger.info("="*70)
+    logger.info("=" * 70)
     log_success(f"Starting {settings.api_title} v{settings.api_version}")
-    logger.info("="*70)
+    logger.info("=" * 70)
 
     # Check database
     db_path = Path(settings.database_path)
@@ -63,14 +63,14 @@ async def lifespan(app: FastAPI):
     logger.info(f"Environment: {settings.environment}")
     logger.info(f"Log level: {settings.log_level}")
     logger.info(f"CORS origins: {settings.cors_origins}")
-    logger.info("="*70)
+    logger.info("=" * 70)
 
     yield
 
     # Shutdown
-    logger.info("="*70)
+    logger.info("=" * 70)
     log_success(f"Shutting down {settings.api_title}")
-    logger.info("="*70)
+    logger.info("=" * 70)
 
 
 # Get settings
@@ -127,13 +127,14 @@ async def root():
         "endpoints": {
             "agent": "/api/v1/agent/query",
             "database": "/api/v1/database/songs",
-            "comparison": "/api/v1/comparison/run"
-        }
+            "comparison": "/api/v1/comparison/run",
+        },
     }
 
 
 # Error handlers
 from fastapi.responses import JSONResponse
+
 
 @app.exception_handler(404)
 async def not_found_handler(request, exc):
@@ -143,8 +144,8 @@ async def not_found_handler(request, exc):
         content={
             "error": "Not Found",
             "detail": f"The requested resource was not found: {request.url.path}",
-            "status_code": 404
-        }
+            "status_code": 404,
+        },
     )
 
 
@@ -157,6 +158,6 @@ async def internal_error_handler(request, exc):
         content={
             "error": "Internal Server Error",
             "detail": "An unexpected error occurred. Please try again later.",
-            "status_code": 500
-        }
+            "status_code": 500,
+        },
     )

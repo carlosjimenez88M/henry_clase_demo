@@ -1,12 +1,13 @@
 """Health check endpoints."""
 
-from datetime import datetime, timezone
-from fastapi import APIRouter
+from datetime import UTC, datetime
 from pathlib import Path
 
-from api.schemas.common import HealthResponse
+from fastapi import APIRouter
+
 from api.core.config import get_settings
 from api.core.logger import logger
+from api.schemas.common import HealthResponse
 
 router = APIRouter()
 
@@ -23,7 +24,7 @@ async def health_check():
     return HealthResponse(
         status="healthy",
         version=settings.api_version,
-        timestamp=datetime.now(timezone.utc).isoformat()
+        timestamp=datetime.now(UTC).isoformat(),
     )
 
 
@@ -56,13 +57,17 @@ async def readiness_check():
         checks["openai_key"] = "missing"
 
     # Determine overall status
-    status = "ready" if all(v in ["ok", "configured"] for v in checks.values()) else "not_ready"
+    status = (
+        "ready"
+        if all(v in ["ok", "configured"] for v in checks.values())
+        else "not_ready"
+    )
 
     return HealthResponse(
         status=status,
         version=settings.api_version,
-        timestamp=datetime.now(timezone.utc).isoformat(),
-        checks=checks
+        timestamp=datetime.now(UTC).isoformat(),
+        checks=checks,
     )
 
 
@@ -78,5 +83,5 @@ async def liveness_check():
     return HealthResponse(
         status="alive",
         version=settings.api_version,
-        timestamp=datetime.now(timezone.utc).isoformat()
+        timestamp=datetime.now(UTC).isoformat(),
     )

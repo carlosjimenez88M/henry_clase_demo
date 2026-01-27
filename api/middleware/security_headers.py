@@ -5,8 +5,10 @@ Adds security headers to all responses and implements request timeout.
 """
 
 import asyncio
+
 from fastapi import Request
 from fastapi.responses import JSONResponse
+
 from api.core.logger import logger
 
 
@@ -27,7 +29,9 @@ async def security_headers_middleware(request: Request, call_next):
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["X-XSS-Protection"] = "1; mode=block"
-    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    response.headers["Strict-Transport-Security"] = (
+        "max-age=31536000; includeSubDomains"
+    )
     response.headers["Content-Security-Policy"] = "default-src 'self'"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
 
@@ -49,15 +53,15 @@ async def timeout_middleware(request: Request, call_next):
         # 60 second timeout for all requests
         response = await asyncio.wait_for(call_next(request), timeout=60.0)
         return response
-    except asyncio.TimeoutError:
+    except TimeoutError:
         logger.error(f"Request timeout: {request.url.path}")
         return JSONResponse(
             status_code=504,
             content={
                 "error": "Gateway Timeout",
                 "detail": "Request took too long to process (>60s)",
-                "status_code": 504
-            }
+                "status_code": 504,
+            },
         )
     except Exception as e:
         logger.error(f"Timeout middleware error: {e}")
@@ -66,6 +70,6 @@ async def timeout_middleware(request: Request, call_next):
             content={
                 "error": "Internal Server Error",
                 "detail": str(e),
-                "status_code": 500
-            }
+                "status_code": 500,
+            },
         )

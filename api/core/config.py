@@ -42,7 +42,7 @@ class APISettings(BaseSettings):
             "http://127.0.0.1:8501",
             "http://127.0.0.1:8000",
         ],
-        description="Allowed CORS origins (no wildcards for security)"
+        description="Allowed CORS origins (no wildcards for security)",
     )
 
     # OpenAI API Key (from base config)
@@ -54,9 +54,7 @@ class APISettings(BaseSettings):
     )
 
     # API Metadata
-    api_title: str = Field(
-        default="Pink Floyd AI Agent API", description="API title"
-    )
+    api_title: str = Field(default="Pink Floyd AI Agent API", description="API title")
     api_description: str = Field(
         default="ReAct agent API with Pink Floyd database and currency tools",
         description="API description",

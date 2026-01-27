@@ -7,10 +7,10 @@ This module runs test queries across multiple models and compares their performa
 import json
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Any
+from typing import Any
 
-from src.agents.agent_factory import AgentFactory
 from src.agents.agent_executor import AgentExecutor
+from src.agents.agent_factory import AgentFactory
 from src.comparison.metrics import MetricsCalculator
 from src.comparison.test_cases import get_all_test_cases
 
@@ -18,7 +18,7 @@ from src.comparison.test_cases import get_all_test_cases
 class ModelEvaluator:
     """Evaluator for comparing multiple models."""
 
-    def __init__(self, models: List[str]):
+    def __init__(self, models: list[str]):
         """
         Initialize evaluator with models to test.
 
@@ -30,10 +30,8 @@ class ModelEvaluator:
         self.results = {}
 
     def run_evaluation(
-        self,
-        test_cases: List[Dict[str, Any]] = None,
-        verbose: bool = True
-    ) -> Dict[str, List[Dict]]:
+        self, test_cases: list[dict[str, Any]] = None, verbose: bool = True
+    ) -> dict[str, list[dict]]:
         """
         Run evaluation across all models.
 
@@ -81,18 +79,20 @@ class ModelEvaluator:
                     except Exception as e:
                         if verbose:
                             print(f" Error: {e}")
-                        model_results.append({
-                            "query": query,
-                            "answer": f"Error: {e}",
-                            "test_case": test_case,
-                            "metrics": {
-                                "model": model_name,
-                                "execution_time_seconds": 0,
-                                "estimated_tokens": {"total": 0},
-                                "estimated_cost_usd": 0,
-                                "num_steps": 0,
+                        model_results.append(
+                            {
+                                "query": query,
+                                "answer": f"Error: {e}",
+                                "test_case": test_case,
+                                "metrics": {
+                                    "model": model_name,
+                                    "execution_time_seconds": 0,
+                                    "estimated_tokens": {"total": 0},
+                                    "estimated_cost_usd": 0,
+                                    "num_steps": 0,
+                                },
                             }
-                        })
+                        )
 
                 self.results[model_name] = model_results
 
@@ -106,7 +106,7 @@ class ModelEvaluator:
 
         return self.results
 
-    def calculate_comparison(self) -> Dict[str, Any]:
+    def calculate_comparison(self) -> dict[str, Any]:
         """
         Calculate comparison metrics across all models.
 
@@ -129,7 +129,7 @@ class ModelEvaluator:
             "timestamp": datetime.now().isoformat(),
             "models": self.models,
             "results": {},
-            "comparison": self.calculate_comparison()
+            "comparison": self.calculate_comparison(),
         }
 
         # Convert results to serializable format
@@ -141,14 +141,14 @@ class ModelEvaluator:
                     "answer": result["answer"],
                     "metrics": result["metrics"],
                     "test_case": result.get("test_case", {}),
-                    "reasoning_trace": result.get("reasoning_trace", [])
+                    "reasoning_trace": result.get("reasoning_trace", []),
                 }
                 serializable_results.append(serializable_result)
 
             data["results"][model_name] = serializable_results
 
         # Save to file
-        with open(output_path, 'w', encoding='utf-8') as f:
+        with open(output_path, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=2, ensure_ascii=False)
 
         print(f"\n Results saved to: {output_path}")
@@ -157,9 +157,9 @@ class ModelEvaluator:
         """Print comparison summary."""
         comparison = self.calculate_comparison()
 
-        print("\n" + "="*70)
+        print("\n" + "=" * 70)
         print("COMPARISON SUMMARY")
-        print("="*70)
+        print("=" * 70)
 
         for model_name in self.models:
             if model_name not in comparison:
@@ -177,11 +177,11 @@ class ModelEvaluator:
             print(f"  Total Cost: ${metrics['cost']['total']}")
 
         if "best" in comparison:
-            print("\n" + "="*70)
+            print("\n" + "=" * 70)
             print("WINNERS")
-            print("="*70)
+            print("=" * 70)
             print(f"   Fastest: {comparison['best']['fastest']}")
             print(f"   Cheapest: {comparison['best']['cheapest']}")
             print(f"   Most Successful: {comparison['best']['most_successful']}")
 
-        print("\n" + "="*70)
+        print("\n" + "=" * 70)

@@ -6,10 +6,10 @@ Uses LRU cache with 5-minute TTL.
 """
 
 import hashlib
-import json
 import time
-from typing import Optional, Dict, Any
 from collections import OrderedDict
+from typing import Any
+
 from api.core.logger import logger
 
 
@@ -34,7 +34,7 @@ class QueryCache:
         """
         self.max_size = max_size
         self.ttl_seconds = ttl_seconds
-        self.cache: OrderedDict[str, Dict[str, Any]] = OrderedDict()
+        self.cache: OrderedDict[str, dict[str, Any]] = OrderedDict()
         self.hits = 0
         self.misses = 0
         logger.info(f"QueryCache initialized: max_size={max_size}, ttl={ttl_seconds}s")
@@ -57,7 +57,9 @@ class QueryCache:
         # Generate SHA256 hash
         return hashlib.sha256(cache_str.encode()).hexdigest()[:16]
 
-    def get(self, query: str, model: str, temperature: float) -> Optional[Dict[str, Any]]:
+    def get(
+        self, query: str, model: str, temperature: float
+    ) -> dict[str, Any] | None:
         """
         Get cached result if available and not expired.
 
@@ -95,7 +97,7 @@ class QueryCache:
 
         return entry["result"]
 
-    def set(self, query: str, model: str, temperature: float, result: Dict[str, Any]):
+    def set(self, query: str, model: str, temperature: float, result: dict[str, Any]):
         """
         Cache a query result.
 
@@ -114,15 +116,14 @@ class QueryCache:
             logger.debug(f"Cache evicted (LRU): {removed_key}")
 
         # Add/update entry
-        self.cache[cache_key] = {
-            "result": result,
-            "timestamp": time.time()
-        }
+        self.cache[cache_key] = {"result": result, "timestamp": time.time()}
 
         # Move to end (most recent)
         self.cache.move_to_end(cache_key)
 
-        logger.debug(f"Cache SET: {cache_key} (size: {len(self.cache)}/{self.max_size})")
+        logger.debug(
+            f"Cache SET: {cache_key} (size: {len(self.cache)}/{self.max_size})"
+        )
 
     def clear(self):
         """Clear all cache entries."""
@@ -131,7 +132,7 @@ class QueryCache:
         self.misses = 0
         logger.info("Query cache cleared")
 
-    def get_statistics(self) -> Dict[str, Any]:
+    def get_statistics(self) -> dict[str, Any]:
         """
         Get cache statistics.
 
@@ -148,14 +149,15 @@ class QueryCache:
             "misses": self.misses,
             "total_requests": total_requests,
             "hit_rate_percent": round(hit_rate, 2),
-            "ttl_seconds": self.ttl_seconds
+            "ttl_seconds": self.ttl_seconds,
         }
 
     def cleanup_expired(self):
         """Remove expired entries from cache."""
         now = time.time()
         expired_keys = [
-            key for key, entry in self.cache.items()
+            key
+            for key, entry in self.cache.items()
             if now - entry["timestamp"] > self.ttl_seconds
         ]
 

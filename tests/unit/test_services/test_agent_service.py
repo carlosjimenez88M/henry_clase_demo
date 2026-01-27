@@ -1,6 +1,5 @@
 """Unit tests for AgentService."""
 
-import pytest
 from api.services.agent_service import AgentService
 
 

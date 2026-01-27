@@ -1,6 +1,5 @@
 """Integration tests for database endpoints."""
 
-import pytest
 from fastapi.testclient import TestClient
 
 
@@ -38,12 +37,7 @@ def test_get_songs_with_album_filter(api_client: TestClient):
 
 def test_search_songs(api_client: TestClient):
     """Test searching songs."""
-    request_data = {
-        "query": "time",
-        "mood": "melancholic",
-        "limit": 10,
-        "offset": 0
-    }
+    request_data = {"query": "time", "mood": "melancholic", "limit": 10, "offset": 0}
 
     response = api_client.post("/api/v1/database/search", json=request_data)
 
@@ -89,11 +83,7 @@ def test_get_albums(api_client: TestClient):
 
 def test_search_with_year_range(api_client: TestClient):
     """Test searching with year range."""
-    request_data = {
-        "year_min": 1970,
-        "year_max": 1979,
-        "limit": 10
-    }
+    request_data = {"year_min": 1970, "year_max": 1979, "limit": 10}
 
     response = api_client.post("/api/v1/database/search", json=request_data)
 

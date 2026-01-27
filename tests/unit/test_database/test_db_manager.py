@@ -1,7 +1,5 @@
 """Unit tests for DatabaseManager."""
 
-import pytest
-from pathlib import Path
 from src.database.db_manager import DatabaseManager
 from src.database.schema import Song
 

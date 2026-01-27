@@ -9,6 +9,7 @@ Features:
 
 import sys
 from pathlib import Path
+
 from loguru import logger
 
 # Remove default handler
@@ -48,27 +49,27 @@ logger.add(
 
 def log_success(message: str, **kwargs):
     """Log a success message in green."""
-    logger.opt(colors=True).success(f"<green>✓ {message}</green>", **kwargs)
+    logger.opt(colors=True).success(f"<green>{message}</green>", **kwargs)
 
 
 def log_error(message: str, **kwargs):
     """Log an error message in red."""
-    logger.opt(colors=True).error(f"<red>✗ {message}</red>", **kwargs)
+    logger.opt(colors=True).error(f"<red>{message}</red>", **kwargs)
 
 
 def log_warning(message: str, **kwargs):
     """Log a warning message in yellow."""
-    logger.opt(colors=True).warning(f"<yellow>⚠ {message}</yellow>", **kwargs)
+    logger.opt(colors=True).warning(f"<yellow>{message}</yellow>", **kwargs)
 
 
 def log_info(message: str, **kwargs):
     """Log an info message in blue."""
-    logger.opt(colors=True).info(f"<blue>ℹ {message}</blue>", **kwargs)
+    logger.opt(colors=True).info(f"<blue>{message}</blue>", **kwargs)
 
 
 def log_debug(message: str, **kwargs):
     """Log a debug message in magenta."""
-    logger.opt(colors=True).debug(f"<magenta>🔍 {message}</magenta>", **kwargs)
+    logger.opt(colors=True).debug(f"<magenta>{message}</magenta>", **kwargs)
 
 
 # Export logger and convenience functions

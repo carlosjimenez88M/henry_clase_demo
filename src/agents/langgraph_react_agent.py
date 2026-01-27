@@ -5,11 +5,13 @@ This module provides a proper LangGraph StateGraph implementation of the ReAct p
 enabling visualization of agent architecture using LangGraph's built-in graph utilities.
 """
 
-from typing import Annotated, Sequence, TypedDict, Literal
-from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, ToolMessage
+from collections.abc import Sequence
+from typing import Annotated, Literal, TypedDict
+
+from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 from langchain_core.tools import BaseTool
 from langchain_openai import ChatOpenAI
-from langgraph.graph import StateGraph, START, END
+from langgraph.graph import END, START, StateGraph
 from langgraph.prebuilt import ToolNode
 from pydantic import SecretStr
 
@@ -18,10 +20,13 @@ from src.config import config
 
 class AgentState(TypedDict):
     """State schema for the ReAct agent graph."""
+
     messages: Annotated[Sequence[BaseMessage], "The messages in the conversation"]
 
 
-def create_langgraph_react_agent(model_name: str, tools: list[BaseTool], temperature: float = 0.1):
+def create_langgraph_react_agent(
+    model_name: str, tools: list[BaseTool], temperature: float = 0.1
+):
     """
     Create a LangGraph-based ReAct agent with proper StateGraph architecture.
 
@@ -40,7 +45,7 @@ def create_langgraph_react_agent(model_name: str, tools: list[BaseTool], tempera
     llm = ChatOpenAI(
         model=model_name,
         temperature=temperature,
-        api_key=SecretStr(config.openai_api_key)
+        api_key=SecretStr(config.openai_api_key),
     )
     llm_with_tools = llm.bind_tools(tools)
 
@@ -77,7 +82,7 @@ Be concise and explain your reasoning."""
         last_message = messages[-1]
 
         # If the LLM makes a tool call, route to tools
-        if hasattr(last_message, 'tool_calls') and last_message.tool_calls:
+        if hasattr(last_message, "tool_calls") and last_message.tool_calls:
             return "tools"
         # Otherwise, end
         return "end"
@@ -95,12 +100,7 @@ Be concise and explain your reasoning."""
     # Add edges
     workflow.add_edge(START, "agent")
     workflow.add_conditional_edges(
-        "agent",
-        should_continue,
-        {
-            "tools": "tools",
-            "end": END
-        }
+        "agent", should_continue, {"tools": "tools", "end": END}
     )
     workflow.add_edge("tools", "agent")
 
@@ -121,9 +121,7 @@ def run_langgraph_agent(graph, query: str) -> dict:
     Returns:
         Dictionary with the final state including all messages
     """
-    initial_state = {
-        "messages": [HumanMessage(content=query)]
-    }
+    initial_state = {"messages": [HumanMessage(content=query)]}
 
     result = graph.invoke(initial_state)
 
@@ -137,5 +135,5 @@ def run_langgraph_agent(graph, query: str) -> dict:
     return {
         "answer": final_answer or "No response generated",
         "messages": result["messages"],
-        "full_state": result
+        "full_state": result,
     }

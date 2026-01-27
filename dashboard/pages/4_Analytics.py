@@ -17,7 +17,7 @@ import httpx
 from datetime import datetime, timedelta
 
 # Page config
-st.set_page_config(page_title="Analytics", page_icon="📊", layout="wide")
+st.set_page_config(page_title="Analytics", page_icon="Analytics", layout="wide")
 
 # Import design system
 from dashboard.design_system import init_design_system

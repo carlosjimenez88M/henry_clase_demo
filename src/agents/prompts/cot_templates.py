@@ -17,6 +17,7 @@ class StandardCoTTemplate(CoTPromptTemplate):
     Use for most queries where thorough reasoning is needed
     but not excessive verbosity.
     """
+
     pass  # Uses base template
 
 
@@ -161,7 +162,9 @@ class AdaptiveCoTTemplate:
     """
 
     @staticmethod
-    def select_template(query: str, complexity: str = "medium") -> type[CoTPromptTemplate]:
+    def select_template(
+        query: str, complexity: str = "medium"
+    ) -> type[CoTPromptTemplate]:
         """
         Select appropriate CoT template based on query complexity.
 
@@ -195,14 +198,18 @@ class AdaptiveCoTTemplate:
 
         # High complexity indicators
         high_complexity_keywords = [
-            "compare", "analyze", "explain why", "what if",
-            "evaluate", "assess", "multiple", "complex"
+            "compare",
+            "analyze",
+            "explain why",
+            "what if",
+            "evaluate",
+            "assess",
+            "multiple",
+            "complex",
         ]
 
         # Low complexity indicators
-        low_complexity_keywords = [
-            "find", "list", "what is", "show", "get"
-        ]
+        low_complexity_keywords = ["find", "list", "what is", "show", "get"]
 
         word_count = len(query.split())
 

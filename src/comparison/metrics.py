@@ -5,15 +5,15 @@ This module provides utilities for calculating and analyzing performance metrics
 across different models.
 """
 
-from typing import Dict, List, Any
 import statistics
+from typing import Any
 
 
 class MetricsCalculator:
     """Calculator for model performance metrics."""
 
     @staticmethod
-    def calculate_execution_metrics(results: List[Dict]) -> Dict[str, Any]:
+    def calculate_execution_metrics(results: list[dict]) -> dict[str, Any]:
         """
         Calculate aggregate metrics from execution results.
 
@@ -41,7 +41,11 @@ class MetricsCalculator:
                 "median": round(statistics.median(execution_times), 2),
                 "min": round(min(execution_times), 2),
                 "max": round(max(execution_times), 2),
-                "stdev": round(statistics.stdev(execution_times), 2) if len(execution_times) > 1 else 0,
+                "stdev": (
+                    round(statistics.stdev(execution_times), 2)
+                    if len(execution_times) > 1
+                    else 0
+                ),
             },
             "tokens": {
                 "total": sum(token_counts),
@@ -62,13 +66,13 @@ class MetricsCalculator:
                 "median": statistics.median(num_steps),
                 "min": min(num_steps),
                 "max": max(num_steps),
-            }
+            },
         }
 
         return metrics
 
     @staticmethod
-    def calculate_success_rate(results: List[Dict]) -> float:
+    def calculate_success_rate(results: list[dict]) -> float:
         """
         Calculate success rate (queries that got an answer).
 
@@ -82,14 +86,13 @@ class MetricsCalculator:
             return 0.0
 
         successful = sum(
-            1 for r in results
-            if r["answer"] and "error" not in r["answer"].lower()
+            1 for r in results if r["answer"] and "error" not in r["answer"].lower()
         )
 
         return round((successful / len(results)) * 100, 1)
 
     @staticmethod
-    def compare_models(model_results: Dict[str, List[Dict]]) -> Dict[str, Any]:
+    def compare_models(model_results: dict[str, list[dict]]) -> dict[str, Any]:
         """
         Compare metrics across multiple models.
 
@@ -116,21 +119,19 @@ class MetricsCalculator:
             comparison["best"] = {
                 "fastest": min(
                     comparison.items(),
-                    key=lambda x: x[1]["metrics"]["execution_time"]["mean"]
+                    key=lambda x: x[1]["metrics"]["execution_time"]["mean"],
                 )[0],
                 "cheapest": min(
-                    comparison.items(),
-                    key=lambda x: x[1]["metrics"]["cost"]["total"]
+                    comparison.items(), key=lambda x: x[1]["metrics"]["cost"]["total"]
                 )[0],
                 "most_successful": max(
-                    comparison.items(),
-                    key=lambda x: x[1]["success_rate"]
+                    comparison.items(), key=lambda x: x[1]["success_rate"]
                 )[0],
             }
 
         return comparison
 
     @staticmethod
-    def export_to_dict(metrics: Dict[str, Any]) -> Dict[str, Any]:
+    def export_to_dict(metrics: dict[str, Any]) -> dict[str, Any]:
         """Export metrics to a serializable dictionary."""
         return metrics

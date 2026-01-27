@@ -5,14 +5,14 @@ Provides centralized access to all prompt templates with
 caching and dynamic selection capabilities.
 """
 
-from typing import Dict, Type, Optional
-from src.agents.prompts.templates import CoTPromptTemplate
+
 from src.agents.prompts.cot_templates import (
+    AdaptiveCoTTemplate,
+    ConciseCoTTemplate,
     StandardCoTTemplate,
     VerboseCoTTemplate,
-    ConciseCoTTemplate,
-    AdaptiveCoTTemplate
 )
+from src.agents.prompts.templates import CoTPromptTemplate
 
 
 class PromptRegistry:
@@ -26,17 +26,19 @@ class PromptRegistry:
     - Template versioning support
     """
 
-    _templates: Dict[str, Type[CoTPromptTemplate]] = {
+    _templates: dict[str, type[CoTPromptTemplate]] = {
         "standard": StandardCoTTemplate,
         "verbose": VerboseCoTTemplate,
         "concise": ConciseCoTTemplate,
-        "default": StandardCoTTemplate
+        "default": StandardCoTTemplate,
     }
 
-    _template_cache: Dict[str, str] = {}
+    _template_cache: dict[str, str] = {}
 
     @classmethod
-    def register_template(cls, name: str, template_class: Type[CoTPromptTemplate]) -> None:
+    def register_template(
+        cls, name: str, template_class: type[CoTPromptTemplate]
+    ) -> None:
         """
         Register a new template.
 
@@ -48,7 +50,7 @@ class PromptRegistry:
         cls._clear_cache(name)
 
     @classmethod
-    def get_template(cls, name: str = "default") -> Type[CoTPromptTemplate]:
+    def get_template(cls, name: str = "default") -> type[CoTPromptTemplate]:
         """
         Get template by name.
 
@@ -62,12 +64,14 @@ class PromptRegistry:
             KeyError: If template not found
         """
         if name not in cls._templates:
-            raise KeyError(f"Template '{name}' not found. Available: {list(cls._templates.keys())}")
+            raise KeyError(
+                f"Template '{name}' not found. Available: {list(cls._templates.keys())}"
+            )
 
         return cls._templates[name]
 
     @classmethod
-    def get_adaptive_template(cls, query: str) -> Type[CoTPromptTemplate]:
+    def get_adaptive_template(cls, query: str) -> type[CoTPromptTemplate]:
         """
         Get template dynamically based on query complexity.
 
@@ -82,10 +86,7 @@ class PromptRegistry:
 
     @classmethod
     def format_prompt(
-        cls,
-        template_name: str,
-        tools: list,
-        use_cache: bool = True
+        cls, template_name: str, tools: list, use_cache: bool = True
     ) -> str:
         """
         Format system prompt with tool descriptions.
@@ -117,11 +118,13 @@ class PromptRegistry:
         return list(cls._templates.keys())
 
     @classmethod
-    def _clear_cache(cls, template_name: Optional[str] = None) -> None:
+    def _clear_cache(cls, template_name: str | None = None) -> None:
         """Clear template cache."""
         if template_name:
             # Clear specific template cache
-            keys_to_remove = [k for k in cls._template_cache if k.startswith(template_name)]
+            keys_to_remove = [
+                k for k in cls._template_cache if k.startswith(template_name)
+            ]
             for key in keys_to_remove:
                 del cls._template_cache[key]
         else:
@@ -144,8 +147,12 @@ class PromptRegistry:
         return {
             "name": name,
             "class": template_class.__name__,
-            "description": template_class.__doc__.strip() if template_class.__doc__ else "No description",
-            "system_template_length": len(template_class.SYSTEM_TEMPLATE)
+            "description": (
+                template_class.__doc__.strip()
+                if template_class.__doc__
+                else "No description"
+            ),
+            "system_template_length": len(template_class.SYSTEM_TEMPLATE),
         }
 
 

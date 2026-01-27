@@ -5,9 +5,10 @@ Implements token bucket algorithm to limit requests to 60/minute per IP.
 """
 
 import time
-from typing import Dict, Tuple
 from collections import defaultdict
-from fastapi import Request, HTTPException, status
+
+from fastapi import HTTPException, Request, status
+
 from api.core.logger import logger
 
 
@@ -44,10 +45,7 @@ class TokenBucket:
         # Refill tokens based on time passed
         now = time.time()
         time_passed = now - self.last_refill
-        self.tokens = min(
-            self.capacity,
-            self.tokens + time_passed * self.refill_rate
-        )
+        self.tokens = min(self.capacity, self.tokens + time_passed * self.refill_rate)
         self.last_refill = now
 
         # Try to consume
@@ -80,12 +78,12 @@ class RateLimiter:
         self.requests_per_minute = requests_per_minute
         self.capacity = requests_per_minute
         self.refill_rate = requests_per_minute / 60.0  # Per second
-        self.buckets: Dict[str, TokenBucket] = defaultdict(
+        self.buckets: dict[str, TokenBucket] = defaultdict(
             lambda: TokenBucket(self.capacity, self.refill_rate)
         )
         logger.info(f"RateLimiter initialized: {requests_per_minute} req/min")
 
-    def check_rate_limit(self, client_ip: str) -> Tuple[bool, float]:
+    def check_rate_limit(self, client_ip: str) -> tuple[bool, float]:
         """
         Check if request is allowed for this IP.
 
@@ -100,7 +98,9 @@ class RateLimiter:
 
         if not allowed:
             wait_time = bucket.get_wait_time()
-            logger.warning(f"Rate limit exceeded for {client_ip}, wait {wait_time:.1f}s")
+            logger.warning(
+                f"Rate limit exceeded for {client_ip}, wait {wait_time:.1f}s"
+            )
             return False, wait_time
 
         return True, 0.0
@@ -114,7 +114,9 @@ class RateLimiter:
         """
         # Simple cleanup - just reset if too many buckets
         if len(self.buckets) > 10000:
-            logger.warning(f"Too many rate limit buckets ({len(self.buckets)}), clearing old ones")
+            logger.warning(
+                f"Too many rate limit buckets ({len(self.buckets)}), clearing old ones"
+            )
             self.buckets.clear()
 
 
@@ -171,9 +173,9 @@ async def rate_limit_middleware(request: Request, call_next):
             detail={
                 "error": "Rate limit exceeded",
                 "message": f"Too many requests. Please wait {wait_time:.1f} seconds.",
-                "retry_after": int(wait_time) + 1
+                "retry_after": int(wait_time) + 1,
             },
-            headers={"Retry-After": str(int(wait_time) + 1)}
+            headers={"Retry-After": str(int(wait_time) + 1)},
         )
 
     # Process request
@@ -181,6 +183,8 @@ async def rate_limit_middleware(request: Request, call_next):
 
     # Add rate limit headers
     response.headers["X-RateLimit-Limit"] = str(_rate_limiter.requests_per_minute)
-    response.headers["X-RateLimit-Remaining"] = str(int(_rate_limiter.buckets[client_ip].tokens))
+    response.headers["X-RateLimit-Remaining"] = str(
+        int(_rate_limiter.buckets[client_ip].tokens)
+    )
 
     return response

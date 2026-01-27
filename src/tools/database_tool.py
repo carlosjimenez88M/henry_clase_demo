@@ -5,7 +5,6 @@ This tool allows the agent to query the Pink Floyd songs database by mood,
 album, lyrics, year, and other criteria.
 """
 
-from typing import List, Optional
 
 from langchain.tools import BaseTool
 from pydantic import Field
@@ -63,7 +62,7 @@ class PinkFloydDatabaseTool(BaseTool):
 
         return self._format_results(songs)
 
-    def _parse_and_query(self, query: str) -> List[Song]:
+    def _parse_and_query(self, query: str) -> list[Song]:
         """Parse query and execute appropriate database operation."""
         # Mood queries
         moods = ["melancholic", "energetic", "psychedelic", "progressive", "dark"]
@@ -72,7 +71,14 @@ class PinkFloydDatabaseTool(BaseTool):
                 return self.db_manager.get_songs_by_mood(mood)
 
         # Album queries
-        albums = ["dark side", "the wall", "wish you were here", "animals", "meddle", "piper"]
+        albums = [
+            "dark side",
+            "the wall",
+            "wish you were here",
+            "animals",
+            "meddle",
+            "piper",
+        ]
         for album in albums:
             if album in query:
                 return self.db_manager.get_songs_by_album(album)
@@ -102,14 +108,31 @@ class PinkFloydDatabaseTool(BaseTool):
         """Extract keywords from query for lyrics search."""
         # Remove common words
         stop_words = {
-            "find", "search", "show", "get", "songs", "with", "lyrics", "about",
-            "the", "a", "an", "and", "or", "but", "in", "on", "at", "to", "for"
+            "find",
+            "search",
+            "show",
+            "get",
+            "songs",
+            "with",
+            "lyrics",
+            "about",
+            "the",
+            "a",
+            "an",
+            "and",
+            "or",
+            "but",
+            "in",
+            "on",
+            "at",
+            "to",
+            "for",
         }
         words = query.split()
         keywords = [w for w in words if w not in stop_words]
         return " ".join(keywords)
 
-    def _format_results(self, songs: List[Song], max_songs: int = 10) -> str:
+    def _format_results(self, songs: list[Song], max_songs: int = 10) -> str:
         """Format songs as a readable string."""
         # Limit number of results
         songs = songs[:max_songs]
@@ -125,7 +148,7 @@ class PinkFloydDatabaseTool(BaseTool):
                 lyrics_snippet = song.lyrics[:120]
                 if len(song.lyrics) > 120:
                     lyrics_snippet += "..."
-                result += f"   Lyrics: \"{lyrics_snippet}\"\n"
+                result += f'   Lyrics: "{lyrics_snippet}"\n'
 
             result += "\n"
 

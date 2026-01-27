@@ -9,7 +9,7 @@ import streamlit as st
 # Page configuration
 st.set_page_config(
     page_title="Pink Floyd AI Agent Demo",
-    page_icon="🔷",
+    page_icon="◆",
     layout="wide",
     initial_sidebar_state="expanded"
 )

@@ -1,6 +1,5 @@
 """End-to-end tests for complete workflows."""
 
-import pytest
 from fastapi.testclient import TestClient
 
 
@@ -30,8 +29,7 @@ def test_database_exploration_workflow(api_client: TestClient):
     if moods_data["moods"]:
         mood = moods_data["moods"][0]
         search_response = api_client.post(
-            "/api/v1/database/search",
-            json={"mood": mood, "limit": 5}
+            "/api/v1/database/search", json={"mood": mood, "limit": 5}
         )
         assert search_response.status_code == 200
         search_data = search_response.json()

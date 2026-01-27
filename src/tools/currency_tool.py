@@ -7,7 +7,6 @@ Includes caching to reduce API calls and fallback to mock data for reliability.
 
 import re
 from datetime import datetime, timedelta
-from typing import Dict, Optional, Tuple
 
 import requests
 from langchain.tools import BaseTool
@@ -32,15 +31,15 @@ class CurrencyPriceTool(BaseTool):
     """
 
     # Internal state
-    cache: Dict[str, Tuple[dict, datetime]] = Field(default_factory=dict, exclude=True)
+    cache: dict[str, tuple[dict, datetime]] = Field(default_factory=dict, exclude=True)
     cache_ttl: int = Field(default=300, exclude=True)  # 5 minutes
     supported_currencies: list = Field(
-        default=[
-            "USD", "EUR", "GBP", "JPY", "CHF", "CAD", "AUD", "MXN", "BRL", "CNY"
-        ],
-        exclude=True
+        default=["USD", "EUR", "GBP", "JPY", "CHF", "CAD", "AUD", "MXN", "BRL", "CNY"],
+        exclude=True,
     )
-    api_url: str = Field(default="https://api.exchangerate-api.com/v4/latest/", exclude=True)
+    api_url: str = Field(
+        default="https://api.exchangerate-api.com/v4/latest/", exclude=True
+    )
 
     def _run(self, query: str) -> str:
         """
@@ -58,7 +57,7 @@ class CurrencyPriceTool(BaseTool):
         if not from_currency or not to_currency:
             return self._format_error(
                 "Could not understand currency query. "
-                f"Please specify currencies like 'USD to EUR' or 'dollar to euro'."
+                "Please specify currencies like 'USD to EUR' or 'dollar to euro'."
             )
 
         # Get exchange rate
@@ -69,10 +68,10 @@ class CurrencyPriceTool(BaseTool):
 
             return self._format_result(from_currency, to_currency, rate, amount)
 
-        except Exception as e:
+        except Exception:
             return self._use_fallback_data(from_currency, to_currency, amount)
 
-    def _parse_query(self, query: str) -> Tuple[Optional[str], Optional[str], float]:
+    def _parse_query(self, query: str) -> tuple[str | None, str | None, float]:
         """
         Parse currency query to extract from/to currencies and amount.
 
@@ -83,22 +82,26 @@ class CurrencyPriceTool(BaseTool):
         amount = 1.0  # Default amount
 
         # Extract amount if present
-        amount_match = re.search(r'(\d+(?:\.\d+)?)', query)
+        amount_match = re.search(r"(\d+(?:\.\d+)?)", query)
         if amount_match:
             amount = float(amount_match.group(1))
 
         # Currency name mappings
         currency_names = {
-            "DOLLAR": "USD", "DOLAR": "USD",
+            "DOLLAR": "USD",
+            "DOLAR": "USD",
             "EURO": "EUR",
-            "POUND": "GBP", "STERLING": "GBP",
+            "POUND": "GBP",
+            "STERLING": "GBP",
             "YEN": "JPY",
             "FRANC": "CHF",
             "CANADIAN": "CAD",
-            "AUSTRALIAN": "AUD", "AUSSIE": "AUD",
+            "AUSTRALIAN": "AUD",
+            "AUSSIE": "AUD",
             "PESO": "MXN",
             "REAL": "BRL",
-            "YUAN": "CNY", "RENMINBI": "CNY"
+            "YUAN": "CNY",
+            "RENMINBI": "CNY",
         }
 
         # Replace currency names with codes
@@ -123,7 +126,9 @@ class CurrencyPriceTool(BaseTool):
 
         return None, None, amount
 
-    def _get_exchange_rate(self, from_currency: str, to_currency: str) -> Optional[float]:
+    def _get_exchange_rate(
+        self, from_currency: str, to_currency: str
+    ) -> float | None:
         """
         Get exchange rate from API or cache.
 
@@ -161,10 +166,7 @@ class CurrencyPriceTool(BaseTool):
             return None
 
     def _use_fallback_data(
-        self,
-        from_currency: str,
-        to_currency: str,
-        amount: float
+        self, from_currency: str, to_currency: str, amount: float
     ) -> str:
         """Use mock/fallback data when API fails."""
         # Mock exchange rates (approximate values for demo)
@@ -201,24 +203,24 @@ class CurrencyPriceTool(BaseTool):
         return result
 
     def _format_result(
-        self,
-        from_currency: str,
-        to_currency: str,
-        rate: float,
-        amount: float
+        self, from_currency: str, to_currency: str, rate: float, amount: float
     ) -> str:
         """Format the exchange rate result."""
         converted_amount = amount * rate
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S UTC")
 
-        result = f"Current exchange rate: 1 {from_currency} = {rate:.4f} {to_currency}\n"
+        result = (
+            f"Current exchange rate: 1 {from_currency} = {rate:.4f} {to_currency}\n"
+        )
         result += f"(as of {timestamp})\n\n"
-        result += f"This means:\n"
-        result += f"  → {amount:.2f} {from_currency} = {converted_amount:.2f} {to_currency}\n"
+        result += "This means:\n"
+        result += (
+            f"  {amount:.2f} {from_currency} = {converted_amount:.2f} {to_currency}\n"
+        )
 
         # Add additional context
         if amount == 1:
-            result += f"  → 100 {from_currency} = {(rate * 100):.2f} {to_currency}\n"
+            result += f"  100 {from_currency} = {(rate * 100):.2f} {to_currency}\n"
 
         return result
 

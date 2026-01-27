@@ -1,8 +1,10 @@
 """Request logging middleware with colored output."""
 
 import time
+
 from fastapi import Request
-from api.core.logger import logger, log_success, log_error
+
+from api.core.logger import log_error, log_success, logger
 
 
 async def log_requests(request: Request, call_next):
@@ -18,7 +20,7 @@ async def log_requests(request: Request, call_next):
     start_time = time.time()
 
     # Log incoming request
-    logger.info(f"→ {request.method} {request.url.path} from {request.client.host}")
+    logger.info(f"{request.method} {request.url.path} from {request.client.host}")
 
     try:
         # Process request
@@ -30,12 +32,12 @@ async def log_requests(request: Request, call_next):
         # Log response with color based on status
         if response.status_code < 400:
             log_success(
-                f"→ {request.method} {request.url.path} "
+                f"{request.method} {request.url.path} "
                 f"{response.status_code} ({duration:.2f}ms)"
             )
         else:
             log_error(
-                f"→ {request.method} {request.url.path} "
+                f"{request.method} {request.url.path} "
                 f"{response.status_code} ({duration:.2f}ms)"
             )
 
@@ -45,7 +47,7 @@ async def log_requests(request: Request, call_next):
         # Log exception
         duration = (time.time() - start_time) * 1000
         log_error(
-            f"→ {request.method} {request.url.path} "
+            f"{request.method} {request.url.path} "
             f"ERROR: {str(e)} ({duration:.2f}ms)"
         )
         raise

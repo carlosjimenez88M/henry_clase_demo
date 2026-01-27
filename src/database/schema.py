@@ -5,7 +5,6 @@ This module defines the SQLAlchemy models for storing and querying Pink Floyd so
 """
 
 from datetime import datetime
-from typing import Optional
 
 from sqlalchemy import Index, Integer, String, Text, create_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, sessionmaker
@@ -13,6 +12,7 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, sessionmaker
 
 class Base(DeclarativeBase):
     """Base class for all models."""
+
     pass
 
 
@@ -25,13 +25,12 @@ class Song(Base):
     title: Mapped[str] = mapped_column(String(200), nullable=False)
     album: Mapped[str] = mapped_column(String(200), nullable=False)
     year: Mapped[int] = mapped_column(Integer, nullable=False)
-    lyrics: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    lyrics: Mapped[str | None] = mapped_column(Text, nullable=True)
     mood: Mapped[str] = mapped_column(String(50), nullable=False)
-    duration_seconds: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
-    track_number: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    duration_seconds: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    track_number: Mapped[int | None] = mapped_column(Integer, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
-        default=datetime.utcnow,
-        nullable=False
+        default=datetime.utcnow, nullable=False
     )
 
     # Indexes for faster queries

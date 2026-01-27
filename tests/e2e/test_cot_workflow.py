@@ -4,10 +4,11 @@ E2E Tests for Chain of Thought Workflow.
 Tests the complete CoT reasoning flow from query to answer.
 """
 
+
 import pytest
-import asyncio
-from src.agents.agent_factory import AgentFactory
+
 from src.agents.agent_executor import AgentExecutor
+from src.agents.agent_factory import AgentFactory
 
 
 class TestCoTWorkflow:
@@ -27,9 +28,10 @@ class TestCoTWorkflow:
         """Test that CoT agent can be created."""
         agent = agent_factory.create_agent("gpt-4o-mini", agent_type="cot")
         assert agent is not None
-        assert hasattr(agent, 'run')
+        assert hasattr(agent, "run")
 
-    def test_cot_agent_execution(self, agent_factory, test_query):
+    @pytest.mark.asyncio
+    async def test_cot_agent_execution(self, agent_factory, test_query):
         """Test that CoT agent executes successfully."""
         # Create agent
         agent = agent_factory.create_agent("gpt-4o-mini", agent_type="cot")
@@ -38,7 +40,7 @@ class TestCoTWorkflow:
         executor = AgentExecutor(agent, "gpt-4o-mini")
 
         # Execute query
-        result = executor.execute(test_query)
+        result = await executor.execute(test_query)
 
         # Verify result structure
         assert "answer" in result
@@ -47,11 +49,12 @@ class TestCoTWorkflow:
         assert result["answer"] is not None
         assert len(result["answer"]) > 0
 
-    def test_cot_reasoning_trace_structure(self, agent_factory, test_query):
+    @pytest.mark.asyncio
+    async def test_cot_reasoning_trace_structure(self, agent_factory, test_query):
         """Test that CoT reasoning trace has proper structure."""
         agent = agent_factory.create_agent("gpt-4o-mini", agent_type="cot")
         executor = AgentExecutor(agent, "gpt-4o-mini")
-        result = executor.execute(test_query)
+        result = await executor.execute(test_query)
 
         trace = result["reasoning_trace"]
         assert len(trace) > 0
@@ -66,28 +69,30 @@ class TestCoTWorkflow:
             assert "type" in step
             assert "timestamp" in step
 
-    def test_cot_confidence_levels(self, agent_factory, test_query):
+    @pytest.mark.asyncio
+    async def test_cot_confidence_levels(self, agent_factory, test_query):
         """Test that CoT agent provides confidence levels."""
         agent = agent_factory.create_agent("gpt-4o-mini", agent_type="cot")
         executor = AgentExecutor(agent, "gpt-4o-mini")
-        result = executor.execute(test_query)
+        result = await executor.execute(test_query)
 
         # Check for confidence in metadata
         if "metadata" in result:
             assert "confidence" in result["metadata"]
             assert result["metadata"]["confidence"] in ["HIGH", "MEDIUM", "LOW"]
 
-    def test_cot_vs_react_comparison(self, agent_factory, test_query):
+    @pytest.mark.asyncio
+    async def test_cot_vs_react_comparison(self, agent_factory, test_query):
         """Test that CoT agent produces different output than ReAct."""
         # Create CoT agent
         cot_agent = agent_factory.create_agent("gpt-4o-mini", agent_type="cot")
         cot_executor = AgentExecutor(cot_agent, "gpt-4o-mini")
-        cot_result = cot_executor.execute(test_query)
+        cot_result = await cot_executor.execute(test_query)
 
         # Create ReAct agent
         react_agent = agent_factory.create_agent("gpt-4o-mini", agent_type="react")
         react_executor = AgentExecutor(react_agent, "gpt-4o-mini")
-        react_result = react_executor.execute(test_query)
+        react_result = await react_executor.execute(test_query)
 
         # Both should have answers
         assert cot_result["answer"] is not None
@@ -100,7 +105,8 @@ class TestCoTWorkflow:
         # ReAct should not have CoT metadata
         assert react_result["metrics"]["agent_type"] == "react"
 
-    def test_multiple_queries_same_agent(self, agent_factory):
+    @pytest.mark.asyncio
+    async def test_multiple_queries_same_agent(self, agent_factory):
         """Test that same agent can handle multiple queries."""
         agent = agent_factory.create_agent("gpt-4o-mini", agent_type="cot")
         executor = AgentExecutor(agent, "gpt-4o-mini")
@@ -108,28 +114,30 @@ class TestCoTWorkflow:
         queries = [
             "Find energetic Pink Floyd songs",
             "What's the USD to EUR exchange rate?",
-            "Show songs from The Wall album"
+            "Show songs from The Wall album",
         ]
 
         for query in queries:
-            result = executor.execute(query)
+            result = await executor.execute(query)
             assert result["answer"] is not None
             assert len(result["reasoning_trace"]) > 0
 
-    def test_error_handling(self, agent_factory):
+    @pytest.mark.asyncio
+    async def test_error_handling(self, agent_factory):
         """Test that agent handles errors gracefully."""
         agent = agent_factory.create_agent("gpt-4o-mini", agent_type="cot")
         executor = AgentExecutor(agent, "gpt-4o-mini")
 
         # Empty query
-        result = executor.execute("")
+        result = await executor.execute("")
         assert result is not None
 
-    def test_performance_metrics(self, agent_factory, test_query):
+    @pytest.mark.asyncio
+    async def test_performance_metrics(self, agent_factory, test_query):
         """Test that performance metrics are captured."""
         agent = agent_factory.create_agent("gpt-4o-mini", agent_type="cot")
         executor = AgentExecutor(agent, "gpt-4o-mini")
-        result = executor.execute(test_query)
+        result = await executor.execute(test_query)
 
         metrics = result["metrics"]
         assert "execution_time_seconds" in metrics

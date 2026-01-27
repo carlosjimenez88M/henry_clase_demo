@@ -8,8 +8,8 @@ Provides:
 - Sample data fixtures
 """
 
+
 import pytest
-from pathlib import Path
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -49,22 +49,22 @@ def test_db_session(test_db_engine):
             album="The Dark Side of the Moon",
             year=1973,
             mood="melancholic",
-            lyrics="Ticking away the moments that make up a dull day"
+            lyrics="Ticking away the moments that make up a dull day",
         ),
         Song(
             title="Money",
             album="The Dark Side of the Moon",
             year=1973,
             mood="energetic",
-            lyrics="Money, get away. Get a good job with more pay"
+            lyrics="Money, get away. Get a good job with more pay",
         ),
         Song(
             title="Wish You Were Here",
             album="Wish You Were Here",
             year=1975,
             mood="melancholic",
-            lyrics="So, so you think you can tell heaven from hell"
-        )
+            lyrics="So, so you think you can tell heaven from hell",
+        ),
     ]
 
     session.add_all(test_songs)
@@ -100,14 +100,14 @@ def mock_openai_response():
                 "type": "action",
                 "content": "Search for melancholic songs",
                 "tool": "pink_floyd_database",
-                "input": {"mood": "melancholic"}
+                "input": {"mood": "melancholic"},
             },
             {
                 "step": 2,
                 "type": "observation",
-                "content": "Found 2 songs: Time, Wish You Were Here"
-            }
-        ]
+                "content": "Found 2 songs: Time, Wish You Were Here",
+            },
+        ],
     }
 
 
@@ -122,18 +122,18 @@ def sample_test_cases():
         {
             "query": "Find melancholic Pink Floyd songs",
             "expected_tool": "pink_floyd_database",
-            "category": "database_search"
+            "category": "database_search",
         },
         {
             "query": "What songs are from The Dark Side of the Moon?",
             "expected_tool": "pink_floyd_database",
-            "category": "database_search"
+            "category": "database_search",
         },
         {
             "query": "Convert 100 USD to EUR",
             "expected_tool": "currency_converter",
-            "category": "currency_conversion"
-        }
+            "category": "currency_conversion",
+        },
     ]
 
 

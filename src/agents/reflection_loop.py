@@ -5,13 +5,14 @@ This module implements a reflection mechanism that allows agents
 to self-assess and improve their reasoning before providing final answers.
 """
 
-from typing import Dict, List, Optional, Any
 from dataclasses import dataclass
 from enum import Enum
+from typing import Any
 
 
 class ReflectionType(Enum):
     """Types of reflection."""
+
     TOOL_RESULT_VALIDATION = "tool_result_validation"
     REASONING_QUALITY = "reasoning_quality"
     ANSWER_COMPLETENESS = "answer_completeness"
@@ -21,11 +22,12 @@ class ReflectionType(Enum):
 @dataclass
 class ReflectionResult:
     """Result of a reflection step."""
+
     should_continue: bool
-    issue_detected: Optional[str]
-    correction_needed: Optional[str]
-    confidence_adjustment: Optional[str]  # "increase" or "decrease"
-    next_action: Optional[str]
+    issue_detected: str | None
+    correction_needed: str | None
+    confidence_adjustment: str | None  # "increase" or "decrease"
+    next_action: str | None
 
 
 class ReflectionLoop:
@@ -53,9 +55,9 @@ class ReflectionLoop:
     def reflect_on_tool_result(
         self,
         tool_name: str,
-        tool_input: Dict,
+        tool_input: dict,
         tool_output: str,
-        expected_output: Optional[str] = None
+        expected_output: str | None = None,
     ) -> ReflectionResult:
         """
         Reflect on a tool result to validate if it's as expected.
@@ -76,7 +78,7 @@ class ReflectionLoop:
                 issue_detected=f"Tool '{tool_name}' returned an error",
                 correction_needed="Consider alternative tool or approach",
                 confidence_adjustment="decrease",
-                next_action="try_alternative_tool"
+                next_action="try_alternative_tool",
             )
 
         # Check if output is empty or too short
@@ -86,7 +88,7 @@ class ReflectionLoop:
                 issue_detected=f"Tool '{tool_name}' returned insufficient data",
                 correction_needed="May need to refine tool input or use additional tools",
                 confidence_adjustment="decrease",
-                next_action="gather_more_information"
+                next_action="gather_more_information",
             )
 
         # Check if output matches expectations (if provided)
@@ -104,7 +106,7 @@ class ReflectionLoop:
                     issue_detected="Tool result doesn't match expectations",
                     correction_needed="Result may not be relevant - consider different approach",
                     confidence_adjustment="decrease",
-                    next_action="reconsider_approach"
+                    next_action="reconsider_approach",
                 )
 
         # Tool result looks good
@@ -113,14 +115,10 @@ class ReflectionLoop:
             issue_detected=None,
             correction_needed=None,
             confidence_adjustment=None,
-            next_action="proceed"
+            next_action="proceed",
         )
 
-    def reflect_on_reasoning(
-        self,
-        reasoning: str,
-        query: str
-    ) -> ReflectionResult:
+    def reflect_on_reasoning(self, reasoning: str, query: str) -> ReflectionResult:
         """
         Reflect on reasoning quality.
 
@@ -138,7 +136,7 @@ class ReflectionLoop:
                 issue_detected="Reasoning is too brief",
                 correction_needed="Provide more detailed explanation of your thinking",
                 confidence_adjustment="decrease",
-                next_action="elaborate_reasoning"
+                next_action="elaborate_reasoning",
             )
 
         # Check if reasoning addresses the query
@@ -146,7 +144,8 @@ class ReflectionLoop:
         reasoning_lower = reasoning.lower()
 
         query_relevance = sum(
-            1 for keyword in query_keywords
+            1
+            for keyword in query_keywords
             if len(keyword) > 3 and keyword in reasoning_lower
         )
 
@@ -156,13 +155,18 @@ class ReflectionLoop:
                 issue_detected="Reasoning doesn't seem to address the query",
                 correction_needed="Ensure reasoning directly addresses the user's question",
                 confidence_adjustment="decrease",
-                next_action="refocus_on_query"
+                next_action="refocus_on_query",
             )
 
         # Check for explicit thinking indicators
         thinking_indicators = [
-            "because", "since", "therefore", "reasoning",
-            "consider", "need to", "should"
+            "because",
+            "since",
+            "therefore",
+            "reasoning",
+            "consider",
+            "need to",
+            "should",
         ]
 
         has_thinking = any(
@@ -175,7 +179,7 @@ class ReflectionLoop:
                 issue_detected="Reasoning lacks explicit thinking process",
                 correction_needed="Show your thinking: WHY this approach, WHAT alternatives considered",
                 confidence_adjustment="decrease",
-                next_action="make_reasoning_explicit"
+                next_action="make_reasoning_explicit",
             )
 
         # Reasoning looks good
@@ -184,14 +188,11 @@ class ReflectionLoop:
             issue_detected=None,
             correction_needed=None,
             confidence_adjustment=None,
-            next_action="proceed"
+            next_action="proceed",
         )
 
     def reflect_on_answer_completeness(
-        self,
-        query: str,
-        answer: str,
-        tool_results: List[str]
+        self, query: str, answer: str, tool_results: list[str]
     ) -> ReflectionResult:
         """
         Reflect on whether answer is complete.
@@ -211,7 +212,7 @@ class ReflectionLoop:
                 issue_detected="Answer is too brief",
                 correction_needed="Provide a more comprehensive answer",
                 confidence_adjustment="decrease",
-                next_action="elaborate_answer"
+                next_action="elaborate_answer",
             )
 
         # Check if answer references tool results
@@ -232,19 +233,19 @@ class ReflectionLoop:
                 issue_detected="Answer doesn't reference tool results",
                 correction_needed="Ensure answer incorporates information from tools used",
                 confidence_adjustment="decrease",
-                next_action="integrate_tool_results"
+                next_action="integrate_tool_results",
             )
 
         # Check if answer addresses key query terms
         query_keywords = [
-            word for word in query.lower().split()
+            word
+            for word in query.lower().split()
             if len(word) > 4  # Focus on meaningful words
         ]
 
         answer_lower = answer.lower()
         addressed_keywords = sum(
-            1 for keyword in query_keywords
-            if keyword in answer_lower
+            1 for keyword in query_keywords if keyword in answer_lower
         )
 
         if query_keywords and addressed_keywords / len(query_keywords) < 0.3:
@@ -253,7 +254,7 @@ class ReflectionLoop:
                 issue_detected="Answer may not fully address the query",
                 correction_needed="Ensure all aspects of the query are addressed",
                 confidence_adjustment="decrease",
-                next_action="address_all_query_aspects"
+                next_action="address_all_query_aspects",
             )
 
         # Answer looks complete
@@ -262,12 +263,11 @@ class ReflectionLoop:
             issue_detected=None,
             correction_needed=None,
             confidence_adjustment=None,
-            next_action="finalize"
+            next_action="finalize",
         )
 
     def check_consistency(
-        self,
-        reasoning_trace: List[Dict[str, Any]]
+        self, reasoning_trace: list[dict[str, Any]]
     ) -> ReflectionResult:
         """
         Check for consistency across reasoning trace.
@@ -296,7 +296,7 @@ class ReflectionLoop:
                     issue_detected="Inconsistent confidence levels across reasoning",
                     correction_needed="Resolve confidence inconsistency - reassess overall confidence",
                     confidence_adjustment="decrease",
-                    next_action="reassess_confidence"
+                    next_action="reassess_confidence",
                 )
 
         # Check for repeated tool use (might indicate inefficiency)
@@ -313,7 +313,7 @@ class ReflectionLoop:
                     issue_detected=f"Tool '{tool_name}' used {count} times - may be inefficient",
                     correction_needed="Consider if tool is being used optimally",
                     confidence_adjustment=None,
-                    next_action="optimize_tool_usage"
+                    next_action="optimize_tool_usage",
                 )
 
         # No consistency issues
@@ -322,7 +322,7 @@ class ReflectionLoop:
             issue_detected=None,
             correction_needed=None,
             confidence_adjustment=None,
-            next_action="proceed"
+            next_action="proceed",
         )
 
     def should_attempt_correction(self) -> bool:
@@ -358,7 +358,7 @@ class ReflectionPromptGenerator:
         prompt_parts = [
             "SELF-REFLECTION: An issue was detected in your reasoning.",
             f"\nIssue: {reflection.issue_detected}",
-            f"\nCorrection needed: {reflection.correction_needed}"
+            f"\nCorrection needed: {reflection.correction_needed}",
         ]
 
         if reflection.confidence_adjustment:
@@ -366,7 +366,9 @@ class ReflectionPromptGenerator:
                 f"\nNote: Your confidence should be adjusted {reflection.confidence_adjustment}."
             )
 
-        prompt_parts.append("\nPlease address this issue and continue with improved reasoning.")
+        prompt_parts.append(
+            "\nPlease address this issue and continue with improved reasoning."
+        )
 
         return "\n".join(prompt_parts)
 

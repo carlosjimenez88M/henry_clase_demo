@@ -5,7 +5,6 @@ This module defines the core CoT prompt structure that enforces
 explicit reasoning, confidence levels, and self-reflection.
 """
 
-from typing import List, Dict, Optional
 from dataclasses import dataclass
 
 
@@ -139,7 +138,7 @@ Provide your reflection:
 """
 
     @classmethod
-    def format_system_prompt(cls, tools: List[Dict]) -> str:
+    def format_system_prompt(cls, tools: list[dict]) -> str:
         """
         Format the system prompt with tool descriptions.
 
@@ -154,13 +153,13 @@ Provide your reflection:
             tool_descriptions += cls.TOOL_DESCRIPTION_TEMPLATE.format(
                 tool_name=tool.get("name", "Unknown"),
                 tool_description=tool.get("description", "No description"),
-                input_schema=tool.get("input_schema", "No schema")
+                input_schema=tool.get("input_schema", "No schema"),
             )
 
         return cls.SYSTEM_TEMPLATE.format(tool_descriptions=tool_descriptions)
 
     @classmethod
-    def format_validation_prompt(cls, issues: List[str]) -> str:
+    def format_validation_prompt(cls, issues: list[str]) -> str:
         """
         Format a prompt to request improved reasoning.
 
@@ -191,7 +190,7 @@ class ReasoningStructure:
     """Helper class to parse structured reasoning from LLM responses."""
 
     @staticmethod
-    def parse_reasoning(response: str) -> Dict[str, Optional[str]]:
+    def parse_reasoning(response: str) -> dict[str, str | None]:
         """
         Parse structured reasoning from LLM response.
 
@@ -218,7 +217,7 @@ class ReasoningStructure:
             "reflection": None,
             "final_answer": None,
             "assumptions": [],
-            "limitations": []
+            "limitations": [],
         }
 
         # Simple extraction (can be enhanced with regex or LLM parsing)
@@ -235,7 +234,7 @@ class ReasoningStructure:
             "understanding": ["understanding:", "step 1"],
             "plan": ["plan:", "step 2"],
             "reflection": ["reflection:", "step 4"],
-            "final_answer": ["final answer:", "step 5"]
+            "final_answer": ["final answer:", "step 5"],
         }
 
         for key, markers in sections.items():
@@ -248,7 +247,9 @@ class ReasoningStructure:
                     for other_key, other_markers in sections.items():
                         if other_key != key:
                             for other_marker in other_markers:
-                                marker_idx = response_lower.find(other_marker, start_idx + len(marker))
+                                marker_idx = response_lower.find(
+                                    other_marker, start_idx + len(marker)
+                                )
                                 if marker_idx != -1 and marker_idx < end_idx:
                                     end_idx = marker_idx
 

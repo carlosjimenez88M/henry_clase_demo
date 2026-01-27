@@ -1,15 +1,15 @@
 """Agent endpoints for query execution."""
 
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, Depends, HTTPException
 
+from api.core.logger import logger
 from api.schemas.agent import (
     AgentQueryRequest,
     AgentQueryResponse,
+    ExecutionHistoryResponse,
     ModelInfo,
-    ExecutionHistoryResponse
 )
 from api.services.agent_service import AgentService
-from api.core.logger import logger
 
 router = APIRouter()
 
@@ -21,8 +21,7 @@ def get_agent_service():
 
 @router.post("/agent/query", response_model=AgentQueryResponse, tags=["Agent"])
 async def execute_agent_query(
-    request: AgentQueryRequest,
-    service: AgentService = Depends(get_agent_service)
+    request: AgentQueryRequest, service: AgentService = Depends(get_agent_service)
 ):
     """
     Execute a query with the AI agent.
@@ -41,17 +40,14 @@ async def execute_agent_query(
             query=request.query,
             model=request.model,
             temperature=request.temperature,
-            max_iterations=request.max_iterations
+            max_iterations=request.max_iterations,
         )
 
         return AgentQueryResponse(**result)
 
     except Exception as e:
         logger.error(f"Query execution failed: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Query execution failed: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Query execution failed: {str(e)}")
 
 
 @router.get("/agent/models", response_model=list[ModelInfo], tags=["Agent"])
@@ -74,15 +70,13 @@ async def get_available_models(service: AgentService = Depends(get_agent_service
     except Exception as e:
         logger.error(f"Failed to get models: {e}")
         raise HTTPException(
-            status_code=500,
-            detail=f"Failed to retrieve models: {str(e)}"
+            status_code=500, detail=f"Failed to retrieve models: {str(e)}"
         )
 
 
 @router.get("/agent/history", response_model=ExecutionHistoryResponse, tags=["Agent"])
 async def get_execution_history(
-    limit: int = 50,
-    service: AgentService = Depends(get_agent_service)
+    limit: int = 50, service: AgentService = Depends(get_agent_service)
 ):
     """
     Get execution history.
@@ -93,23 +87,20 @@ async def get_execution_history(
     try:
         executions = service.get_execution_history(limit=limit)
 
-        return ExecutionHistoryResponse(
-            total=len(executions),
-            executions=executions
-        )
+        return ExecutionHistoryResponse(total=len(executions), executions=executions)
 
     except Exception as e:
         logger.error(f"Failed to get history: {e}")
         raise HTTPException(
-            status_code=500,
-            detail=f"Failed to retrieve history: {str(e)}"
+            status_code=500, detail=f"Failed to retrieve history: {str(e)}"
         )
 
 
-@router.get("/agent/history/{execution_id}", response_model=AgentQueryResponse, tags=["Agent"])
+@router.get(
+    "/agent/history/{execution_id}", response_model=AgentQueryResponse, tags=["Agent"]
+)
 async def get_execution_detail(
-    execution_id: str,
-    service: AgentService = Depends(get_agent_service)
+    execution_id: str, service: AgentService = Depends(get_agent_service)
 ):
     """
     Get detailed execution result by ID.
@@ -125,8 +116,7 @@ async def get_execution_detail(
 
         if not result:
             raise HTTPException(
-                status_code=404,
-                detail=f"Execution {execution_id} not found"
+                status_code=404, detail=f"Execution {execution_id} not found"
             )
 
         return AgentQueryResponse(**result)
@@ -136,6 +126,5 @@ async def get_execution_detail(
     except Exception as e:
         logger.error(f"Failed to get execution detail: {e}")
         raise HTTPException(
-            status_code=500,
-            detail=f"Failed to retrieve execution: {str(e)}"
+            status_code=500, detail=f"Failed to retrieve execution: {str(e)}"
         )
